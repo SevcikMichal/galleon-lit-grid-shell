@@ -45,10 +45,11 @@ export class GalleonCanvas extends LitElement {
   }
 
   private _onDrop(e: DragEvent) {
-    const name = e.dataTransfer!.getData('galleon/component');
-    if (!name) return;
+    const raw = e.dataTransfer!.getData('galleon/component');
+    if (!raw) return;
     e.preventDefault();
 
+    const { name, colspan, rowspan } = JSON.parse(raw);
     const rect = this.getBoundingClientRect();
     const col = Math.floor((e.clientX - rect.left) / (rect.width / this.columns)) + 1;
     const row = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
@@ -56,6 +57,8 @@ export class GalleonCanvas extends LitElement {
     const cell = document.createElement('galleon-cell');
     cell.setAttribute('col', String(col));
     cell.setAttribute('row', String(row));
+    cell.setAttribute('colspan', String(colspan));
+    cell.setAttribute('rowspan', String(rowspan));
     cell.textContent = name;
     this.appendChild(cell);
   }
