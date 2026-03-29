@@ -145,7 +145,7 @@ export class GalleonCanvas extends LitElement {
     cell.setAttribute('row', String(row));
     cell.setAttribute('colspan', String(colspan));
     cell.setAttribute('rowspan', String(rowspan));
-    cell.textContent = name;
+    cell.setAttribute('name', name);
     this.appendChild(cell);
   }
 
