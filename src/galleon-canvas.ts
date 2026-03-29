@@ -213,6 +213,7 @@ export class GalleonCanvas extends LitElement {
       cell.setAttribute('colspan', String(colspan));
       cell.setAttribute('rowspan', String(rowspan));
       cell.setAttribute('name', name);
+      cell.setAttribute('cell-id', crypto.randomUUID());
       this.appendChild(cell);
     }
   };
@@ -278,6 +279,7 @@ export class GalleonCanvas extends LitElement {
     cell.setAttribute('colspan', String(colspan));
     cell.setAttribute('rowspan', String(rowspan));
     cell.setAttribute('name', name);
+    cell.setAttribute('cell-id', crypto.randomUUID());
     this.appendChild(cell);
   }
 

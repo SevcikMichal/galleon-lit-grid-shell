@@ -9,6 +9,7 @@ export class GalleonCell extends LitElement {
   @property({ type: Number }) colspan = 1;
   @property({ type: Number }) rowspan = 1;
   @property() name = '';
+  @property({ type: String, attribute: 'cell-id' }) cellId = '';
 
   static styles = css`
     :host {
@@ -71,6 +72,14 @@ export class GalleonCell extends LitElement {
 
     .content {
       flex: 1;
+      display: flex;
+      min-height: 0;
+    }
+
+    polyfea-context {
+      display: flex;
+      flex: 1;
+      min-height: 0;
     }
 
     .resize-handle {
@@ -139,7 +148,11 @@ export class GalleonCell extends LitElement {
         <span class="title">${this.name}</span>
         <button @click=${this._remove} title="Remove">✕</button>
       </header>
-      <div class="content"><slot></slot></div>
+      <div class="content">
+        ${this.cellId
+          ? html`<polyfea-context name="galleon-cell-${this.cellId}"></polyfea-context>`
+          : html`<slot></slot>`}
+      </div>
       <div class="resize-handle" @pointerdown=${this._onResizePointerDown}></div>
     `;
   }

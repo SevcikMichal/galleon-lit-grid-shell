@@ -76,7 +76,9 @@ export class GalleonShell extends LitElement {
         columns=${this.columns}
         rows=${this.rows}
         portrait-columns=${this.portraitColumns}
-      ></galleon-canvas>
+      >
+        <polyfea-context name="galleon-canvas"></polyfea-context>
+      </galleon-canvas>
       <galleon-sidebar @galleon-sidebar-resize=${this._onSidebarResize}>
         <galleon-components-browser>
           <polyfea-context name="galleon-components">

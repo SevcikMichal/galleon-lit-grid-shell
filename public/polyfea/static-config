@@ -3,6 +3,9 @@
     "galleon-shell": {
       "module": "./src/index.ts",
       "resources": []
+    },
+    "demo-widgets": {
+      "module": "./demo/demo-widgets.ts"
     }
   },
   "contextAreas": [
@@ -49,6 +52,82 @@
               "colspan": "12",
               "rowspan": "2"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "galleon-canvas",
+      "contextArea": {
+        "elements": [
+          {
+            "tagName": "galleon-cell",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "col": "1",
+              "row": "1",
+              "colspan": "4",
+              "rowspan": "3",
+              "name": "Chart",
+              "cell-id": "demo-chart-1"
+            }
+          },
+          {
+            "tagName": "galleon-cell",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "col": "5",
+              "row": "1",
+              "colspan": "6",
+              "rowspan": "4",
+              "name": "Table",
+              "cell-id": "demo-table-1"
+            }
+          },
+          {
+            "tagName": "galleon-cell",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "col": "1",
+              "row": "5",
+              "colspan": "12",
+              "rowspan": "2",
+              "name": "Logs",
+              "cell-id": "demo-logs-1"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "galleon-cell-demo-chart-1",
+      "contextArea": {
+        "elements": [
+          {
+            "tagName": "demo-chart-widget",
+            "microfrontend": "demo-widgets"
+          }
+        ]
+      }
+    },
+    {
+      "name": "galleon-cell-demo-table-1",
+      "contextArea": {
+        "elements": [
+          {
+            "tagName": "demo-table-widget",
+            "microfrontend": "demo-widgets"
+          }
+        ]
+      }
+    },
+    {
+      "name": "galleon-cell-demo-logs-1",
+      "contextArea": {
+        "elements": [
+          {
+            "tagName": "demo-logs-widget",
+            "microfrontend": "demo-widgets"
           }
         ]
       }
