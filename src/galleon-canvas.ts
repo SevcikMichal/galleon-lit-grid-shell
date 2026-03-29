@@ -8,6 +8,7 @@ export class GalleonCanvas extends LitElement {
   @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
 
   @state() private _portrait = false;
+  @state() private _dragging = false;
 
   private _mq: MediaQueryList | undefined;
 
@@ -28,6 +29,12 @@ export class GalleonCanvas extends LitElement {
       display: grid;
       pointer-events: none;
       z-index: -1;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    :host([dragging]) #grid {
+      opacity: 1;
     }
 
     .track {
@@ -46,15 +53,31 @@ export class GalleonCanvas extends LitElement {
     this._mq = window.matchMedia('(orientation: portrait)');
     this._mq.addEventListener('change', this._onOrientationChange);
     this._onOrientationChange(this._mq);
+    document.addEventListener('dragstart', this._onDocDragStart);
+    document.addEventListener('dragend', this._onDocDragEnd);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._mq?.removeEventListener('change', this._onOrientationChange);
+    document.removeEventListener('dragstart', this._onDocDragStart);
+    document.removeEventListener('dragend', this._onDocDragEnd);
   }
 
   private _onOrientationChange = (e: MediaQueryList | MediaQueryListEvent) => {
     this._portrait = e.matches;
+  };
+
+  private _onDocDragStart = (e: DragEvent) => {
+    if (e.dataTransfer?.types.includes('galleon/component')) {
+      this._dragging = true;
+      this.toggleAttribute('dragging', true);
+    }
+  };
+
+  private _onDocDragEnd = () => {
+    this._dragging = false;
+    this.toggleAttribute('dragging', false);
   };
 
   private _applyGridStyles() {
