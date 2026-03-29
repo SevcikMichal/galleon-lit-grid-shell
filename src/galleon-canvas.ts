@@ -95,12 +95,12 @@ export class GalleonCanvas extends LitElement {
   private _onDocDragStart = (e: DragEvent) => {
     const types = e.dataTransfer?.types ?? [];
     if (types.includes('galleon/cell')) {
-      const cell = (e.target as Element).closest('galleon-cell') as any;
+      const cell = e.composedPath().find(el => (el as Element).tagName === 'GALLEON-CELL') as any;
       this._dragColspan = cell?.colspan ?? 1;
       this._dragRowspan = cell?.rowspan ?? 1;
       this._movingCell = cell;
     } else if (types.includes('galleon/component')) {
-      const el = (e.target as Element).closest('galleon-component') as any;
+      const el = e.composedPath().find(el => (el as Element).tagName === 'GALLEON-COMPONENT') as any;
       this._dragColspan = el?.colspan ?? 1;
       this._dragRowspan = el?.rowspan ?? 1;
       this._movingCell = null;

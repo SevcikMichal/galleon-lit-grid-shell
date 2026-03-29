@@ -150,14 +150,12 @@ export class GalleonComponentsBrowser extends LitElement {
 
   private _updateVar() {
     const portrait = this.hasAttribute('portrait');
-    if (portrait) {
-      document.documentElement.style.setProperty('--sidebar-width', '0px');
-      return;
-    }
-    document.documentElement.style.setProperty(
-      '--sidebar-width',
-      this._open ? 'clamp(200px, 22vw, 420px)' : '40px'
-    );
+    const width = portrait ? '0px' : (this._open ? 'clamp(200px, 22vw, 420px)' : '40px');
+    const height = portrait ? (this._open ? 'clamp(180px, 35vh, 280px)' : '40px') : '0px';
+    this.dispatchEvent(new CustomEvent('galleon-browser-resize', {
+      bubbles: true, composed: true,
+      detail: { width, height },
+    }));
   }
 
   render() {

@@ -6,49 +6,11 @@
   <title>Galleon</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    :root { --sidebar-width: clamp(200px, 22vw, 420px); }
-    #app {
-      position: relative;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f0f0f0;
-    }
-    galleon-components-browser {
-      position: absolute;
-      top: 0;
-      right: 0;
-      height: 100%;
-      z-index: 10;
-    }
-
-    @media (orientation: portrait) {
-      #app {
-        overflow-y: auto;
-        align-items: flex-start;
-      }
-      galleon-components-browser {
-        top: auto;
-        bottom: 0;
-        left: 0;
-        height: auto;
-      }
-    }
+    html, body, galleon-shell { height: 100%; }
   </style>
 </head>
 <body>
-  <div id="app">
-    <galleon-canvas columns="12" rows="8">
-    </galleon-canvas>
-    <galleon-components-browser>
-      <galleon-component name="Chart" description="Visualise time-series or aggregated metrics" colspan="4" rowspan="3"></galleon-component>
-      <galleon-component name="Table" description="Browse and filter tabular data" colspan="6" rowspan="4"></galleon-component>
-      <galleon-component name="Map" description="Geo-spatial data on an interactive map" colspan="4" rowspan="4"></galleon-component>
-      <galleon-component name="Logs" description="Tail and search structured log streams" colspan="12" rowspan="2"></galleon-component>
-    </galleon-components-browser>
-  </div>
+  <galleon-shell columns="12" rows="8"></galleon-shell>
 
   <script type="module">
     import '/src/index.ts';
