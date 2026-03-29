@@ -19,6 +19,7 @@ export class GalleonCell extends LitElement {
       box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
       margin: 4px;
       overflow: hidden;
+      position: relative;
     }
 
     header {
@@ -69,6 +70,39 @@ export class GalleonCell extends LitElement {
     .content {
       flex: 1;
     }
+
+    .resize-handle {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      cursor: nwse-resize;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    :host(:hover) .resize-handle {
+      opacity: 1;
+    }
+
+    .resize-handle::before,
+    .resize-handle::after {
+      content: '';
+      position: absolute;
+      background: rgba(0,0,0,0.25);
+      border-radius: 1px;
+    }
+
+    .resize-handle::before {
+      right: 0; bottom: 5px;
+      width: 10px; height: 2px;
+    }
+
+    .resize-handle::after {
+      right: 0; bottom: 0;
+      width: 10px; height: 2px;
+    }
   `;
 
   private _remove() {
@@ -87,6 +121,15 @@ export class GalleonCell extends LitElement {
     startTouchDrag(e, { type: 'cell', name: this.name, colspan: this.colspan, rowspan: this.rowspan, movingCell: this });
   }
 
+  private _onResizePointerDown(e: PointerEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('galleon-resize-start', {
+      bubbles: true, composed: true,
+      detail: { cell: this },
+    }));
+  }
+
   render() {
     return html`
       <header draggable="true" @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}>
@@ -94,6 +137,7 @@ export class GalleonCell extends LitElement {
         <button @click=${this._remove} title="Remove">✕</button>
       </header>
       <div class="content"><slot></slot></div>
+      <div class="resize-handle" @pointerdown=${this._onResizePointerDown}></div>
     `;
   }
 
