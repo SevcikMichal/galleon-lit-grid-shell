@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import type { TouchDragData } from './touch-drag.js';
 
 @customElement('galleon-canvas')
 export class GalleonCanvas extends LitElement {
@@ -69,6 +70,9 @@ export class GalleonCanvas extends LitElement {
     this._onOrientationChange(this._mq);
     document.addEventListener('dragstart', this._onDocDragStart);
     document.addEventListener('dragend', this._onDocDragEnd);
+    document.addEventListener('galleon-drag-start', this._onTouchDragStart as EventListener);
+    document.addEventListener('galleon-drag-move', this._onTouchDragMove as EventListener);
+    document.addEventListener('galleon-drag-end', this._onTouchDragEnd as EventListener);
   }
 
   disconnectedCallback() {
@@ -76,6 +80,9 @@ export class GalleonCanvas extends LitElement {
     this._mq?.removeEventListener('change', this._onOrientationChange);
     document.removeEventListener('dragstart', this._onDocDragStart);
     document.removeEventListener('dragend', this._onDocDragEnd);
+    document.removeEventListener('galleon-drag-start', this._onTouchDragStart as EventListener);
+    document.removeEventListener('galleon-drag-move', this._onTouchDragMove as EventListener);
+    document.removeEventListener('galleon-drag-end', this._onTouchDragEnd as EventListener);
   }
 
   private _onOrientationChange = (e: MediaQueryList | MediaQueryListEvent) => {
@@ -104,6 +111,54 @@ export class GalleonCanvas extends LitElement {
     this._hoverCol = -1;
     this._hoverRow = -1;
     this.toggleAttribute('dragging', false);
+  };
+
+  private _onTouchDragStart = (e: CustomEvent<TouchDragData>) => {
+    const { colspan, rowspan, movingCell } = e.detail;
+    this._dragColspan = colspan;
+    this._dragRowspan = rowspan;
+    this._movingCell = movingCell ?? null;
+    this.toggleAttribute('dragging', true);
+  };
+
+  private _onTouchDragMove = (e: CustomEvent<{ x: number; y: number }>) => {
+    const rect = this.getBoundingClientRect();
+    const { x, y } = e.detail;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      this._hoverCol = -1;
+      this._hoverRow = -1;
+    } else {
+      this._hoverCol = Math.floor((x - rect.left) / (rect.width / this._cols)) + 1;
+      this._hoverRow = Math.floor((y - rect.top) / (rect.height / this.rows)) + 1;
+    }
+  };
+
+  private _onTouchDragEnd = (e: CustomEvent<{ x: number; y: number } & TouchDragData>) => {
+    const { x, y } = e.detail;
+    this._hoverCol = -1;
+    this._hoverRow = -1;
+    this.toggleAttribute('dragging', false);
+    const rect = this.getBoundingClientRect();
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      this._movingCell = null;
+      return;
+    }
+    const col = Math.floor((x - rect.left) / (rect.width / this._cols)) + 1;
+    const row = Math.floor((y - rect.top) / (rect.height / this.rows)) + 1;
+    if (this._movingCell) {
+      this._movingCell.setAttribute('col', String(col));
+      this._movingCell.setAttribute('row', String(row));
+      this._movingCell = null;
+    } else {
+      const { name, colspan, rowspan } = e.detail;
+      const cell = document.createElement('galleon-cell');
+      cell.setAttribute('col', String(col));
+      cell.setAttribute('row', String(row));
+      cell.setAttribute('colspan', String(colspan));
+      cell.setAttribute('rowspan', String(rowspan));
+      cell.setAttribute('name', name);
+      this.appendChild(cell);
+    }
   };
 
   private _applyGridStyles() {

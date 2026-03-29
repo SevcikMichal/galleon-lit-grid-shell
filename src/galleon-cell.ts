@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { startTouchDrag } from './touch-drag.js';
 
 @customElement('galleon-cell')
 export class GalleonCell extends LitElement {
@@ -82,9 +83,13 @@ export class GalleonCell extends LitElement {
     e.dataTransfer!.effectAllowed = 'move';
   }
 
+  private _onTouchStart(e: TouchEvent) {
+    startTouchDrag(e, { type: 'cell', name: this.name, colspan: this.colspan, rowspan: this.rowspan, movingCell: this });
+  }
+
   render() {
     return html`
-      <header draggable="true" @dragstart=${this._onDragStart}>
+      <header draggable="true" @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}>
         <span class="title">${this.name}</span>
         <button @click=${this._remove} title="Remove">✕</button>
       </header>

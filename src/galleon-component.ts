@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { startTouchDrag } from './touch-drag.js';
 
 @customElement('galleon-component')
 export class GalleonComponent extends LitElement {
@@ -87,9 +88,13 @@ export class GalleonComponent extends LitElement {
     e.dataTransfer!.effectAllowed = 'copy';
   }
 
+  private _onTouchStart(e: TouchEvent) {
+    startTouchDrag(e, { type: 'component', name: this.name, colspan: this.colspan, rowspan: this.rowspan });
+  }
+
   render() {
     return html`
-      <div class="preview">
+      <div class="preview" @touchstart=${this._onTouchStart}>
         ${this.preview
           ? html`<img src=${this.preview} alt=${this.name} />`
           : html`<span class="preview-placeholder">⬜</span>`}
