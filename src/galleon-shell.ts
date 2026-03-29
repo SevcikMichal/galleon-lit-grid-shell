@@ -42,18 +42,20 @@ export class GalleonShell extends LitElement {
       :host {
         align-items: flex-start;
         overflow-y: auto;
+        padding-bottom: var(--browser-height, 40px);
       }
 
       galleon-canvas {
         max-width: 100%;
-        max-height: calc(100% - var(--browser-height, 0px));
-        margin-bottom: var(--browser-height, 40px);
-        margin-right: var(--browser-width, 0px);
+        max-height: 100%;
+        margin-right: 0;
         transition: max-height 0.2s;
       }
 
       galleon-components-browser {
+        position: fixed;
         top: auto;
+        right: 0;
         bottom: 0;
         left: 0;
         height: auto;
