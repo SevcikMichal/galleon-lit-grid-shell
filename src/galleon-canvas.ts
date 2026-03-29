@@ -6,11 +6,14 @@ export class GalleonCanvas extends LitElement {
   @property({ type: Number }) columns = 12;
   @property({ type: Number }) rows = 8;
 
+  private _ro: ResizeObserver | undefined;
+
   static styles = css`
     :host {
       display: grid;
       width: 100%;
-      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
       position: relative;
       isolation: isolate;
     }
@@ -36,6 +39,21 @@ export class GalleonCanvas extends LitElement {
     super.connectedCallback();
     this.addEventListener('dragover', this._onDragOver);
     this.addEventListener('drop', this._onDrop);
+    this._ro = new ResizeObserver(() => this._applyGridStyles());
+    this._ro.observe(this);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._ro?.disconnect();
+  }
+
+  private _applyGridStyles() {
+    this.style.gridTemplateColumns = `repeat(${this.columns}, 1fr)`;
+    this.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
+    const portrait = this.offsetHeight > this.offsetWidth;
+    this.style.aspectRatio = portrait ? '' : `${this.columns} / ${this.rows}`;
+    this.style.height = portrait ? '100%' : '';
   }
 
   private _onDragOver(e: DragEvent) {
@@ -77,8 +95,7 @@ export class GalleonCanvas extends LitElement {
   }
 
   updated() {
-    this.style.gridTemplateColumns = `repeat(${this.columns}, 1fr)`;
-    this.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
+    this._applyGridStyles();
   }
 }
 

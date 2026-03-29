@@ -10,6 +10,10 @@
     #app {
       position: relative;
       height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f0f0;
     }
     galleon-components-browser {
       position: absolute;
@@ -18,11 +22,20 @@
       height: 100%;
       z-index: 10;
     }
+
+    @media (orientation: portrait) {
+      galleon-components-browser {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        height: auto;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <galleon-canvas columns="12" rows="8" style="width: 100%; height: 100%;">
+    <galleon-canvas columns="12" rows="8">
     </galleon-canvas>
     <galleon-components-browser>
       <galleon-component name="Chart" description="Visualise time-series or aggregated metrics" colspan="4" rowspan="3"></galleon-component>

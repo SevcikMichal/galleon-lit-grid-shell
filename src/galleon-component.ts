@@ -30,9 +30,13 @@ export class GalleonComponent extends LitElement {
       cursor: grabbing;
     }
 
+    :host {
+      container-type: inline-size;
+    }
+
     .preview {
       width: 100%;
-      height: 100px;
+      aspect-ratio: 16 / 7;
       background: #f0f0f0;
       display: flex;
       align-items: center;
@@ -47,22 +51,22 @@ export class GalleonComponent extends LitElement {
     }
 
     .preview-placeholder {
-      font-size: 28px;
+      font-size: clamp(18px, 6cqi, 32px);
       color: #ccc;
     }
 
     .body {
-      padding: 10px 12px 12px;
+      padding: clamp(6px, 3cqi, 12px) clamp(8px, 4cqi, 14px);
     }
 
     .name {
-      font-size: 13px;
+      font-size: clamp(11px, 3.5cqi, 14px);
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: clamp(2px, 1cqi, 5px);
     }
 
     .description {
-      font-size: 11px;
+      font-size: clamp(10px, 2.8cqi, 12px);
       color: #888;
       line-height: 1.4;
     }
