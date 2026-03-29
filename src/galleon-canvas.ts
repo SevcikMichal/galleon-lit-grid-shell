@@ -9,7 +9,11 @@ export class GalleonCanvas extends LitElement {
 
   @state() private _portrait = false;
   @state() private _dragging = false;
+  @state() private _hoverCol = -1;
+  @state() private _hoverRow = -1;
 
+  private _dragColspan = 1;
+  private _dragRowspan = 1;
   private _mq: MediaQueryList | undefined;
 
   private get _cols() { return this._portrait ? this.portraitColumns : this.columns; }
@@ -39,6 +43,12 @@ export class GalleonCanvas extends LitElement {
 
     .track {
       border: 1px solid #ddd;
+      transition: background 0.1s;
+    }
+
+    .track.will-fill {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
     }
 
     slot {
@@ -49,6 +59,7 @@ export class GalleonCanvas extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.addEventListener('dragover', this._onDragOver);
+    this.addEventListener('dragleave', this._onDragLeave);
     this.addEventListener('drop', this._onDrop);
     this._mq = window.matchMedia('(orientation: portrait)');
     this._mq.addEventListener('change', this._onOrientationChange);
@@ -69,14 +80,19 @@ export class GalleonCanvas extends LitElement {
   };
 
   private _onDocDragStart = (e: DragEvent) => {
-    if (e.dataTransfer?.types.includes('galleon/component')) {
-      this._dragging = true;
-      this.toggleAttribute('dragging', true);
-    }
+    const raw = e.dataTransfer?.getData('galleon/component');
+    if (!raw) return;
+    const { colspan, rowspan } = JSON.parse(raw);
+    this._dragColspan = colspan;
+    this._dragRowspan = rowspan;
+    this._dragging = true;
+    this.toggleAttribute('dragging', true);
   };
 
   private _onDocDragEnd = () => {
     this._dragging = false;
+    this._hoverCol = -1;
+    this._hoverRow = -1;
     this.toggleAttribute('dragging', false);
   };
 
@@ -100,6 +116,16 @@ export class GalleonCanvas extends LitElement {
     if (!e.dataTransfer!.types.includes('galleon/component')) return;
     e.preventDefault();
     e.dataTransfer!.dropEffect = 'copy';
+    const rect = this.getBoundingClientRect();
+    this._hoverCol = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
+    this._hoverRow = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
+  }
+
+  private _onDragLeave(e: DragEvent) {
+    if (!this.contains(e.relatedTarget as Node)) {
+      this._hoverCol = -1;
+      this._hoverRow = -1;
+    }
   }
 
   private _onDrop(e: DragEvent) {
@@ -121,6 +147,14 @@ export class GalleonCanvas extends LitElement {
     this.appendChild(cell);
   }
 
+  private _willFill(trackIndex: number) {
+    if (this._hoverCol < 1 || this._hoverRow < 1) return false;
+    const col = (trackIndex % this._cols) + 1;
+    const row = Math.floor(trackIndex / this._cols) + 1;
+    return col >= this._hoverCol && col < this._hoverCol + this._dragColspan
+        && row >= this._hoverRow && row < this._hoverRow + this._dragRowspan;
+  }
+
   render() {
     const tracks = Array.from({ length: this._cols * this.rows });
     return html`
@@ -128,7 +162,9 @@ export class GalleonCanvas extends LitElement {
         grid-template-columns: repeat(${this._cols}, 1fr);
         grid-template-rows: repeat(${this.rows}, ${this._rowSize});
       ">
-        ${tracks.map(() => html`<div class="track"></div>`)}
+        ${tracks.map((_, i) => html`
+          <div class="track ${this._willFill(i) ? 'will-fill' : ''}"></div>
+        `)}
       </div>
       <slot></slot>
     `;
