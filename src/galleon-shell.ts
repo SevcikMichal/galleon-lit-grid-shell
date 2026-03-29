@@ -79,11 +79,8 @@ export class GalleonShell extends LitElement {
       ></galleon-canvas>
       <galleon-sidebar @galleon-sidebar-resize=${this._onSidebarResize}>
         <galleon-components-browser>
-          <galleon-component name="Chart" description="Visualise time-series or aggregated metrics" colspan="4" rowspan="3"></galleon-component>
-          <galleon-component name="Table" description="Browse and filter tabular data" colspan="6" rowspan="4"></galleon-component>
-          <galleon-component name="Map" description="Geo-spatial data on an interactive map" colspan="4" rowspan="4"></galleon-component>
-          <galleon-component name="Logs" description="Tail and search structured log streams" colspan="12" rowspan="2"></galleon-component>
-          <slot name="components"></slot>
+          <polyfea-context name="galleon-components">
+          </polyfea-context>
         </galleon-components-browser>
       </galleon-sidebar>
     `;

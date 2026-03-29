@@ -1,0 +1,57 @@
+{
+  "microfrontends": {
+    "galleon-shell": {
+      "module": "./src/index.ts",
+      "resources": []
+    }
+  },
+  "contextAreas": [
+    {
+      "name": "galleon-components",
+      "contextArea": {
+        "elements": [
+          {
+            "tagName": "galleon-component",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "name": "Chart",
+              "description": "Visualise time-series or aggregated metrics",
+              "colspan": "4",
+              "rowspan": "3"
+            }
+          },
+          {
+            "tagName": "galleon-component",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "name": "Table",
+              "description": "Browse and filter tabular data",
+              "colspan": "6",
+              "rowspan": "4"
+            }
+          },
+          {
+            "tagName": "galleon-component",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "name": "Map",
+              "description": "Geo-spatial data on an interactive map",
+              "colspan": "4",
+              "rowspan": "4"
+            }
+          },
+          {
+            "tagName": "galleon-component",
+            "microfrontend": "galleon-shell",
+            "attributes": {
+              "name": "Logs",
+              "description": "Tail and search structured log streams",
+              "colspan": "12",
+              "rowspan": "2"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
