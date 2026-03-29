@@ -32,6 +32,34 @@ export class GalleonCanvas extends LitElement {
     }
   `;
 
+  connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener('dragover', this._onDragOver);
+    this.addEventListener('drop', this._onDrop);
+  }
+
+  private _onDragOver(e: DragEvent) {
+    if (!e.dataTransfer!.types.includes('galleon/component')) return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = 'copy';
+  }
+
+  private _onDrop(e: DragEvent) {
+    const name = e.dataTransfer!.getData('galleon/component');
+    if (!name) return;
+    e.preventDefault();
+
+    const rect = this.getBoundingClientRect();
+    const col = Math.floor((e.clientX - rect.left) / (rect.width / this.columns)) + 1;
+    const row = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
+
+    const cell = document.createElement('galleon-cell');
+    cell.setAttribute('col', String(col));
+    cell.setAttribute('row', String(row));
+    cell.textContent = name;
+    this.appendChild(cell);
+  }
+
   render() {
     const tracks = Array.from({ length: this.columns * this.rows });
     return html`
