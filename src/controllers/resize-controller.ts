@@ -62,7 +62,6 @@ export class ResizeController implements ReactiveController {
     this._cleanup();
   }
 
-  /** Bind this to the resize handle's pointerdown event. */
   readonly onPointerDown = (e: PointerEvent, direction: ResizeDirection): void => {
     e.preventDefault();
     e.stopPropagation();

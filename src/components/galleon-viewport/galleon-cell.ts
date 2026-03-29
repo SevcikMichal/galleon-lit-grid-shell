@@ -71,8 +71,6 @@ export class GalleonCell extends LitElement {
     }
   }
 
-  // ── Drag to reposition ──────────────────────────────────────────────────────
-
   private _onHeaderDragStart(e: DragEvent): void {
     if (!this.editable || !e.dataTransfer) return;
     e.dataTransfer.effectAllowed = 'move';
@@ -84,13 +82,9 @@ export class GalleonCell extends LitElement {
     e.dataTransfer.setData(DRAG_TYPE_CELL, JSON.stringify(payload));
   }
 
-  // ── Resize handles ──────────────────────────────────────────────────────────
-
   private _onHandlePointerDown(e: PointerEvent, direction: ResizeDirection): void {
     this._resizeCtrl?.onPointerDown(e, direction);
   }
-
-  // ── Close ───────────────────────────────────────────────────────────────────
 
   private _onClose(): void {
     this.dispatchEvent(new CustomEvent('galleon:cell-removed', {

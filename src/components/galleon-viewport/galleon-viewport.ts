@@ -30,8 +30,6 @@ interface GhostState {
 export class GalleonViewport extends LitElement {
   static override styles = viewportStyles;
 
-  // ── Public API ──────────────────────────────────────────────────────────────
-
   /** Full layout manifest. Setting this replaces all cells. */
   @property({ type: Object })
   set manifest(value: GridManifest) {
@@ -46,8 +44,6 @@ export class GalleonViewport extends LitElement {
 
   /** When true, drag handles, resize handles, and close buttons are shown. */
   @property({ type: Boolean, reflect: true }) editable = false;
-
-  // ── Internal state ──────────────────────────────────────────────────────────
 
   @state() private _ghost: GhostState | null = null;
   @state() private _dragActive = false;
@@ -68,8 +64,6 @@ export class GalleonViewport extends LitElement {
 
   private _resizeObserver: ResizeObserver | null = null;
   private _effectiveColumns = 12;
-
-  // ── Lifecycle ───────────────────────────────────────────────────────────────
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -94,8 +88,6 @@ export class GalleonViewport extends LitElement {
     }
   }
 
-  // ── Public methods ──────────────────────────────────────────────────────────
-
   loadManifest(manifest: GridManifest): void {
     this._store.load(manifest);
     this._effectiveColumns = manifest.columns;
@@ -118,8 +110,6 @@ export class GalleonViewport extends LitElement {
     this._store.removeCell(id);
   }
 
-  // ── Private helpers ─────────────────────────────────────────────────────────
-
   private _applyGridVars(): void {
     const m = this._store.manifest;
     this.style.setProperty('--galleon-columns', String(this._effectiveColumns));
@@ -139,8 +129,6 @@ export class GalleonViewport extends LitElement {
       this._applyGridVars();
     }
   };
-
-  // ── Event handlers ──────────────────────────────────────────────────────────
 
   private _onCellRemoved(e: CustomEvent<{ id: string }>): void {
     this._store.removeCell(e.detail.id);
@@ -169,8 +157,6 @@ export class GalleonViewport extends LitElement {
     this._dragActive = false;
     this.removeAttribute('drag-active');
   }
-
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   override render() {
     const cells = this._store.cells.map(c =>

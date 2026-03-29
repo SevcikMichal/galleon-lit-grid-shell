@@ -5,15 +5,6 @@ import { DRAG_TYPE_CELL, DRAG_TYPE_INVENTORY } from '../types/events.js';
 import * as polyfeaBridge from '../polyfea/polyfea-bridge.js';
 import { findFreeRow } from '../utils/grid-math.js';
 
-/**
- * ReactiveController that handles all drag-and-drop targeting logic for
- * galleon-viewport's grid surface.
- *
- * Drop-targeting strategy: when a drag enters the grid surface we mount a
- * transparent overlay grid of `cols × rows` divs. Each div carries data-col
- * and data-row attributes. The currently hovered div gives us the target cell
- * without any coordinate math or shadow-DOM elementFromPoint issues.
- */
 export class DragDropController implements ReactiveController {
   private _overlay: HTMLElement | null = null;
   private _hoveredCol = 1;
@@ -35,8 +26,6 @@ export class DragDropController implements ReactiveController {
   hostDisconnected(): void {
     this._tearDownOverlay();
   }
-
-  // ── Drag enter / leave on the grid surface ──────────────────────────────────
 
   readonly onDragEnter = (e: DragEvent): void => {
     if (!this._isGalleonDrag(e)) return;
@@ -75,8 +64,6 @@ export class DragDropController implements ReactiveController {
     }
   };
 
-  // ── Inventory drop ──────────────────────────────────────────────────────────
-
   private _handleInventoryDrop(dt: DataTransfer): void {
     const raw = dt.getData(DRAG_TYPE_INVENTORY);
     if (!raw) return;
@@ -85,7 +72,6 @@ export class DragDropController implements ReactiveController {
     const col = this._hoveredCol;
     const row = this._hoveredRow;
 
-    // Load the component module, then insert the cell.
     polyfeaBridge
       .ensureLoaded(payload.microfrontend, payload.tagName, payload.moduleUrl)
       .then(() => {
@@ -102,8 +88,6 @@ export class DragDropController implements ReactiveController {
         console.error('[galleon] Failed to load dropped component:', err);
       });
   }
-
-  // ── Cell reposition drop ────────────────────────────────────────────────────
 
   private _handleCellDrop(dt: DataTransfer): void {
     const raw = dt.getData(DRAG_TYPE_CELL);
@@ -126,8 +110,6 @@ export class DragDropController implements ReactiveController {
     }));
   }
 
-  // ── Overlay grid ────────────────────────────────────────────────────────────
-
   private _buildOverlay(): void {
     if (this._overlay) return;
 
@@ -135,7 +117,6 @@ export class DragDropController implements ReactiveController {
     if (!surface) return;
 
     const cols = this.getColumns();
-    // Estimate visible rows from surface height and computed row height.
     const cs = getComputedStyle(surface);
     const firstRow = cs.gridTemplateRows.split(' ')[0];
     const rowPx = parseFloat(firstRow) || 80;
@@ -172,7 +153,6 @@ export class DragDropController implements ReactiveController {
       }
     }
 
-    // Position surface relatively so the absolute overlay aligns.
     const surfacePosition = getComputedStyle(surface).position;
     if (surfacePosition === 'static') {
       surface.style.position = 'relative';
@@ -187,8 +167,6 @@ export class DragDropController implements ReactiveController {
     this._overlay = null;
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
   private _isGalleonDrag(e: DragEvent): boolean {
     return (
       (e.dataTransfer?.types.includes(DRAG_TYPE_INVENTORY) ?? false) ||
@@ -196,7 +174,6 @@ export class DragDropController implements ReactiveController {
     );
   }
 
-  /** Called from galleon-inventory-item's dragstart to pre-populate ghost size. */
   setDragPayload(payload: { colSpan: number; rowSpan: number }): void {
     this._ghostPayload = payload;
   }
@@ -205,7 +182,6 @@ export class DragDropController implements ReactiveController {
     this._ghostPayload = null;
   }
 
-  /** Imperatively add a cell, auto-finding a free row. */
   addCellAtFreeRow(
     tagName: string,
     microfrontend: string,

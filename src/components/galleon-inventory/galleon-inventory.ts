@@ -48,7 +48,6 @@ export class GalleonInventory extends LitElement {
       const items = await loadInventoryItems(this.manifestUrl, this.contextArea);
       this._items = items;
 
-      // Register module URLs in the bridge so drops can find them.
       const urlMap = new Map<string, string>();
       for (const item of items) {
         if (item.moduleUrl) urlMap.set(item.microfrontend, item.moduleUrl);

@@ -11,7 +11,6 @@ const loaded = new Set<string>();
 /** Map of microfrontend → module URL, populated at load time. */
 const moduleUrls = new Map<string, string>();
 
-/** Register module URLs from the polyfea manifest so the bridge can find them. */
 export function registerModuleUrls(urls: Map<string, string>): void {
   for (const [mfe, url] of urls) {
     moduleUrls.set(mfe, url);
@@ -66,7 +65,6 @@ export async function ensureLoaded(
     // Polyfea core path — hands off to polyfea's mutation-observer based loader.
     cl.defineLazy(tagName, url);
   } else {
-    // Fallback: direct dynamic import.
     try {
       await import(/* @vite-ignore */ url);
     } catch (err) {
