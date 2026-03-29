@@ -6,11 +6,13 @@
   <title>Galleon</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
+    html, body { height: 100%; background: #fff; }
   </style>
 </head>
 <body>
-  <galleon-canvas style="width: 100vw; height: 100vh;"></galleon-canvas>
+  <galleon-canvas columns="12" rows="8" style="width: 100vw; height: 100vh;">
+    <galleon-cell col="1" row="1" colspan="4" rowspan="2"></galleon-cell>
+  </galleon-canvas>
 
   <script type="module">
     import '/src/index.ts';
