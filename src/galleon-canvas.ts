@@ -1,19 +1,23 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 @customElement('galleon-canvas')
 export class GalleonCanvas extends LitElement {
   @property({ type: Number }) columns = 12;
   @property({ type: Number }) rows = 8;
+  @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
 
-  private _ro: ResizeObserver | undefined;
+  @state() private _portrait = false;
+
+  private _mq: MediaQueryList | undefined;
+
+  private get _cols() { return this._portrait ? this.portraitColumns : this.columns; }
+  private get _rowSize() { return this._portrait ? '25vw' : '1fr'; }
 
   static styles = css`
     :host {
       display: grid;
       width: 100%;
-      max-width: 100%;
-      max-height: 100%;
       position: relative;
       isolation: isolate;
     }
@@ -39,21 +43,34 @@ export class GalleonCanvas extends LitElement {
     super.connectedCallback();
     this.addEventListener('dragover', this._onDragOver);
     this.addEventListener('drop', this._onDrop);
-    this._ro = new ResizeObserver(() => this._applyGridStyles());
-    this._ro.observe(this);
+    this._mq = window.matchMedia('(orientation: portrait)');
+    this._mq.addEventListener('change', this._onOrientationChange);
+    this._onOrientationChange(this._mq);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this._ro?.disconnect();
+    this._mq?.removeEventListener('change', this._onOrientationChange);
   }
 
+  private _onOrientationChange = (e: MediaQueryList | MediaQueryListEvent) => {
+    this._portrait = e.matches;
+  };
+
   private _applyGridStyles() {
-    this.style.gridTemplateColumns = `repeat(${this.columns}, 1fr)`;
-    this.style.gridTemplateRows = `repeat(${this.rows}, 1fr)`;
-    const portrait = this.offsetHeight > this.offsetWidth;
-    this.style.aspectRatio = portrait ? '' : `${this.columns} / ${this.rows}`;
-    this.style.height = portrait ? '100%' : '';
+    this.style.gridTemplateColumns = `repeat(${this._cols}, 1fr)`;
+    this.style.gridTemplateRows = `repeat(${this.rows}, ${this._rowSize})`;
+    if (this._portrait) {
+      this.style.aspectRatio = '';
+      this.style.maxHeight = '';
+      this.style.height = 'auto';
+      this.style.minHeight = '100%';
+    } else {
+      this.style.aspectRatio = `${this.columns} / ${this.rows}`;
+      this.style.maxHeight = '100%';
+      this.style.height = '';
+      this.style.minHeight = '';
+    }
   }
 
   private _onDragOver(e: DragEvent) {
@@ -69,7 +86,7 @@ export class GalleonCanvas extends LitElement {
 
     const { name, colspan, rowspan } = JSON.parse(raw);
     const rect = this.getBoundingClientRect();
-    const col = Math.floor((e.clientX - rect.left) / (rect.width / this.columns)) + 1;
+    const col = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
     const row = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
 
     const cell = document.createElement('galleon-cell');
@@ -82,11 +99,11 @@ export class GalleonCanvas extends LitElement {
   }
 
   render() {
-    const tracks = Array.from({ length: this.columns * this.rows });
+    const tracks = Array.from({ length: this._cols * this.rows });
     return html`
       <div id="grid" style="
-        grid-template-columns: repeat(${this.columns}, 1fr);
-        grid-template-rows: repeat(${this.rows}, 1fr);
+        grid-template-columns: repeat(${this._cols}, 1fr);
+        grid-template-rows: repeat(${this.rows}, ${this._rowSize});
       ">
         ${tracks.map(() => html`<div class="track"></div>`)}
       </div>
