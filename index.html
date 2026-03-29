@@ -3,46 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Galleon — Dev Harness</title>
+  <title>Galleon</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; }
-    #app {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      grid-template-rows: 48px 1fr;
-      height: 100%;
-    }
-    header {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      padding: 0 16px;
-      background: #1e293b;
-      border-bottom: 1px solid #334155;
-      gap: 12px;
-      font-weight: 600;
-      font-size: 15px;
-    }
-    header span { opacity: 0.5; font-size: 12px; font-weight: 400; }
+    html, body { height: 100%; }
   </style>
 </head>
 <body>
-  <div id="app">
-    <header>
-      ⚓ Galleon Grid Shell
-      <span>dev harness — drag widgets from the inventory into the grid</span>
-    </header>
-    <galleon-inventory
-      manifest-url="/demo/polyfea-manifest.json"
-      context-area="galleon.inventory"
-    ></galleon-inventory>
-    <galleon-viewport editable columns="12"></galleon-viewport>
-  </div>
+  <galleon-canvas style="width: 100vw; height: 100vh;"></galleon-canvas>
 
   <script type="module">
     import '/src/index.ts';
-    import '/demo/demo-widget.ts';
   </script>
 </body>
 </html>

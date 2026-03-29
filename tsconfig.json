@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src", "demo", "tests"],
+  "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
