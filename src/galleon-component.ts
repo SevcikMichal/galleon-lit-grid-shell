@@ -13,6 +13,7 @@ export class GalleonComponent extends LitElement {
   static styles = css`
     :host {
       display: block;
+      width: var(--galleon-item-width, auto);
       border: 1px solid var(--galleon-border, #e2e2e2);
       border-radius: 6px;
       background: var(--galleon-surface-2, #fff);
