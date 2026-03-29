@@ -9,10 +9,10 @@ function injectThemeVars() {
   style.id = THEME_STYLE_ID;
   style.textContent = `
     :root {
-      --galleon-bg: #f0f0f0;
+      --galleon-bg: rgb(240, 240, 240);
       --galleon-surface: #fafafa;
       --galleon-surface-2: #fff;
-      --galleon-border: #e2e2e2;
+      --galleon-border: #b7b7b7;
       --galleon-text: #333;
       --galleon-text-muted: #888;
       --galleon-hover: #eee;
