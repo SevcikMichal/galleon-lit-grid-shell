@@ -27,6 +27,11 @@ export class GalleonCell extends LitElement {
       height: 36px;
       flex-shrink: 0;
       border-bottom: 1px solid #f0f0f0;
+      cursor: grab;
+    }
+
+    header:active {
+      cursor: grabbing;
     }
 
     .title {
@@ -69,9 +74,17 @@ export class GalleonCell extends LitElement {
     this.remove();
   }
 
+  private _onDragStart(e: DragEvent) {
+    e.dataTransfer!.setData('galleon/cell', JSON.stringify({
+      colspan: this.colspan,
+      rowspan: this.rowspan,
+    }));
+    e.dataTransfer!.effectAllowed = 'move';
+  }
+
   render() {
     return html`
-      <header>
+      <header draggable="true" @dragstart=${this._onDragStart}>
         <span class="title">${this.name}</span>
         <button @click=${this._remove} title="Remove">✕</button>
       </header>

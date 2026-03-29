@@ -8,12 +8,13 @@ export class GalleonCanvas extends LitElement {
   @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
 
   @state() private _portrait = false;
-  @state() private _dragging = false;
+
   @state() private _hoverCol = -1;
   @state() private _hoverRow = -1;
 
   private _dragColspan = 1;
   private _dragRowspan = 1;
+  private _movingCell: Element | null = null;
   private _mq: MediaQueryList | undefined;
 
   private get _cols() { return this._portrait ? this.portraitColumns : this.columns; }
@@ -82,17 +83,24 @@ export class GalleonCanvas extends LitElement {
   };
 
   private _onDocDragStart = (e: DragEvent) => {
-    const raw = e.dataTransfer?.getData('galleon/component');
-    if (!raw) return;
-    const { colspan, rowspan } = JSON.parse(raw);
-    this._dragColspan = colspan;
-    this._dragRowspan = rowspan;
-    this._dragging = true;
+    const types = e.dataTransfer?.types ?? [];
+    if (types.includes('galleon/cell')) {
+      const cell = (e.target as Element).closest('galleon-cell') as any;
+      this._dragColspan = cell?.colspan ?? 1;
+      this._dragRowspan = cell?.rowspan ?? 1;
+      this._movingCell = cell;
+    } else if (types.includes('galleon/component')) {
+      const el = (e.target as Element).closest('galleon-component') as any;
+      this._dragColspan = el?.colspan ?? 1;
+      this._dragRowspan = el?.rowspan ?? 1;
+      this._movingCell = null;
+    } else {
+      return;
+    }
     this.toggleAttribute('dragging', true);
   };
 
   private _onDocDragEnd = () => {
-    this._dragging = false;
     this._hoverCol = -1;
     this._hoverRow = -1;
     this.toggleAttribute('dragging', false);
@@ -115,9 +123,16 @@ export class GalleonCanvas extends LitElement {
   }
 
   private _onDragOver(e: DragEvent) {
-    if (!e.dataTransfer!.types.includes('galleon/component')) return;
-    e.preventDefault();
-    e.dataTransfer!.dropEffect = 'copy';
+    const types = e.dataTransfer!.types;
+    if (types.includes('galleon/cell')) {
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = 'move';
+    } else if (types.includes('galleon/component')) {
+      e.preventDefault();
+      e.dataTransfer!.dropEffect = 'copy';
+    } else {
+      return;
+    }
     const rect = this.getBoundingClientRect();
     this._hoverCol = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
     this._hoverRow = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
@@ -131,15 +146,21 @@ export class GalleonCanvas extends LitElement {
   }
 
   private _onDrop(e: DragEvent) {
-    const raw = e.dataTransfer!.getData('galleon/component');
-    if (!raw) return;
     e.preventDefault();
-
-    const { name, colspan, rowspan } = JSON.parse(raw);
     const rect = this.getBoundingClientRect();
     const col = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
     const row = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
 
+    if (this._movingCell) {
+      this._movingCell.setAttribute('col', String(col));
+      this._movingCell.setAttribute('row', String(row));
+      this._movingCell = null;
+      return;
+    }
+
+    const raw = e.dataTransfer!.getData('galleon/component');
+    if (!raw) return;
+    const { name, colspan, rowspan } = JSON.parse(raw);
     const cell = document.createElement('galleon-cell');
     cell.setAttribute('col', String(col));
     cell.setAttribute('row', String(row));
