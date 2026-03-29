@@ -127,7 +127,6 @@ export class GalleonComponentsBrowser extends LitElement {
     this._mq = window.matchMedia('(orientation: portrait)');
     this._onOrientationChange(this._mq);
     this._mq.addEventListener('change', this._onOrientationChange);
-    this._updateVar();
   }
 
   disconnectedCallback() {
@@ -139,23 +138,11 @@ export class GalleonComponentsBrowser extends LitElement {
     this.toggleAttribute('portrait', e.matches);
     this._open = !e.matches;
     this.toggleAttribute('collapsed', e.matches);
-    this._updateVar();
   };
 
   private _toggle() {
     this._open = !this._open;
     this.toggleAttribute('collapsed', !this._open);
-    this._updateVar();
-  }
-
-  private _updateVar() {
-    const portrait = this.hasAttribute('portrait');
-    const width = portrait ? '0px' : (this._open ? 'clamp(200px, 22vw, 420px)' : '40px');
-    const height = portrait ? (this._open ? 'clamp(180px, 35vh, 280px)' : '40px') : '0px';
-    this.dispatchEvent(new CustomEvent('galleon-browser-resize', {
-      bubbles: true, composed: true,
-      detail: { width, height },
-    }));
   }
 
   render() {

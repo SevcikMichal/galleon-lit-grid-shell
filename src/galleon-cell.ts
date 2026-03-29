@@ -124,9 +124,10 @@ export class GalleonCell extends LitElement {
   private _onResizePointerDown(e: PointerEvent) {
     e.preventDefault();
     e.stopPropagation();
+    (e.target as Element).setPointerCapture(e.pointerId);
     this.dispatchEvent(new CustomEvent('galleon-resize-start', {
       bubbles: true, composed: true,
-      detail: { cell: this },
+      detail: { cell: this, pointerId: e.pointerId, pointerType: e.pointerType },
     }));
   }
 

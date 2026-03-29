@@ -24,6 +24,8 @@ export class GalleonShell extends LitElement {
     galleon-canvas {
       flex: 1;
       max-width: calc(100% - var(--browser-width, 0px));
+      margin-right: var(--browser-width, 40px);
+      margin-bottom: var(--browser-width, 0px);
       max-height: 100%;
       transition: max-width 0.2s;
     }
@@ -45,6 +47,8 @@ export class GalleonShell extends LitElement {
       galleon-canvas {
         max-width: 100%;
         max-height: calc(100% - var(--browser-height, 0px));
+        margin-bottom: var(--browser-height, 40px);
+        margin-right: var(--browser-width, 0px);
         transition: max-height 0.2s;
       }
 
@@ -58,11 +62,6 @@ export class GalleonShell extends LitElement {
     }
   `;
 
-  private _onBrowserChange(e: CustomEvent<{ width: string; height: string }>) {
-    this.style.setProperty('--browser-width', e.detail.width);
-    this.style.setProperty('--browser-height', e.detail.height);
-  }
-
   render() {
     return html`
       <galleon-canvas
@@ -70,7 +69,7 @@ export class GalleonShell extends LitElement {
         rows=${this.rows}
         portrait-columns=${this.portraitColumns}
       ></galleon-canvas>
-      <galleon-components-browser @galleon-browser-resize=${this._onBrowserChange}>
+      <galleon-components-browser>
         <galleon-component name="Chart" description="Visualise time-series or aggregated metrics" colspan="4" rowspan="3"></galleon-component>
         <galleon-component name="Table" description="Browse and filter tabular data" colspan="6" rowspan="4"></galleon-component>
         <galleon-component name="Map" description="Geo-spatial data on an interactive map" colspan="4" rowspan="4"></galleon-component>

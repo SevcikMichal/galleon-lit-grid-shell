@@ -110,16 +110,20 @@ export class GalleonCanvas extends LitElement {
     this.toggleAttribute('dragging', true);
   };
 
-  private _onResizeStart = (e: CustomEvent<{ cell: any }>) => {
+  private _resizePointerId = -1;
+
+  private _onResizeStart = (e: CustomEvent<{ cell: any; pointerId: number; pointerType: string }>) => {
     if (this._resizingCell) return;
     this._resizingCell = e.detail.cell;
+    this._resizePointerId = e.detail.pointerId;
     this._resizeMoved = false;
     document.addEventListener('pointermove', this._onResizeMove);
     document.addEventListener('pointerup', this._onResizeEnd);
+    document.addEventListener('pointercancel', this._onResizeCancel);
   };
 
   private _onResizeMove = (e: PointerEvent) => {
-    if (!this._resizingCell) return;
+    if (!this._resizingCell || e.pointerId !== this._resizePointerId) return;
     this._resizeMoved = true;
     const rect = this.getBoundingClientRect();
     const col = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
@@ -131,20 +135,32 @@ export class GalleonCanvas extends LitElement {
   };
 
   private _onResizeEnd = (e: PointerEvent) => {
-    if (!this._resizingCell) return;
+    if (!this._resizingCell || e.pointerId !== this._resizePointerId) return;
     if (this._resizeMoved) {
       const rect = this.getBoundingClientRect();
       const col = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
       const row = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
       this._resizingCell.setAttribute('colspan', String(Math.max(1, col - this._resizingCell.col + 1)));
       this._resizingCell.setAttribute('rowspan', String(Math.max(1, row - this._resizingCell.row + 1)));
-      this._resizingCell.style.gridColumn = '';
-      this._resizingCell.style.gridRow = '';
     }
     this._resizingCell = null;
+    this._resizePointerId = -1;
     this._resizeMoved = false;
     document.removeEventListener('pointermove', this._onResizeMove);
     document.removeEventListener('pointerup', this._onResizeEnd);
+    document.removeEventListener('pointercancel', this._onResizeCancel);
+  };
+
+  private _onResizeCancel = (e: PointerEvent) => {
+    if (!this._resizingCell || e.pointerId !== this._resizePointerId) return;
+    this._resizingCell.style.gridColumn = `${this._resizingCell.col} / span ${this._resizingCell.colspan}`;
+    this._resizingCell.style.gridRow = `${this._resizingCell.row} / span ${this._resizingCell.rowspan}`;
+    this._resizingCell = null;
+    this._resizePointerId = -1;
+    this._resizeMoved = false;
+    document.removeEventListener('pointermove', this._onResizeMove);
+    document.removeEventListener('pointerup', this._onResizeEnd);
+    document.removeEventListener('pointercancel', this._onResizeCancel);
   };
 
   private _onDocDragEnd = () => {
