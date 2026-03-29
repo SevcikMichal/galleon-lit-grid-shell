@@ -14,12 +14,13 @@ export class GalleonCell extends LitElement {
     :host {
       display: flex;
       flex-direction: column;
-      background: #fff;
+      background: var(--galleon-surface-2, #fff);
       border-radius: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 3px var(--galleon-shadow, rgba(0,0,0,0.08)), 0 4px 12px var(--galleon-shadow, rgba(0,0,0,0.06));
       margin: 4px;
       overflow: hidden;
       position: relative;
+      transition: background 0.2s;
     }
 
     header {
@@ -28,8 +29,9 @@ export class GalleonCell extends LitElement {
       padding: 0 8px 0 12px;
       height: 36px;
       flex-shrink: 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--galleon-border, #f0f0f0);
       cursor: grab;
+      transition: border-color 0.2s;
     }
 
     header:active {
@@ -41,7 +43,7 @@ export class GalleonCell extends LitElement {
       text-align: center;
       font-size: 12px;
       font-weight: 600;
-      color: #444;
+      color: var(--galleon-text, #444);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

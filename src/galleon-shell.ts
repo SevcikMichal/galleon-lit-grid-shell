@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './galleon-canvas.js';
+import './galleon-sidebar.js';
 import './galleon-components-browser.js';
 import './galleon-component.js';
 
@@ -18,19 +19,19 @@ export class GalleonShell extends LitElement {
       width: 100%;
       height: 100%;
       position: relative;
-      background: #f0f0f0;
+      background: var(--galleon-bg, #f0f0f0);
+      transition: background 0.2s;
     }
 
     galleon-canvas {
       flex: 1;
-      max-width: calc(100% - var(--browser-width, 0px));
-      margin-right: var(--browser-width, 40px);
-      margin-bottom: var(--browser-width, 0px);
+      max-width: calc(100% - var(--sidebar-width, 0px));
+      margin-right: var(--sidebar-width, 40px);
       max-height: 100%;
-      transition: max-width 0.2s;
+      transition: max-width 0.2s, margin-right 0.2s;
     }
 
-    galleon-components-browser {
+    galleon-sidebar {
       position: absolute;
       top: 0;
       right: 0;
@@ -42,7 +43,7 @@ export class GalleonShell extends LitElement {
       :host {
         align-items: flex-start;
         overflow-y: auto;
-        padding-bottom: var(--browser-height, 40px);
+        padding-bottom: var(--sidebar-height, 40px);
       }
 
       galleon-canvas {
@@ -52,7 +53,7 @@ export class GalleonShell extends LitElement {
         transition: max-height 0.2s;
       }
 
-      galleon-components-browser {
+      galleon-sidebar {
         position: fixed;
         top: auto;
         right: 0;
@@ -64,6 +65,11 @@ export class GalleonShell extends LitElement {
     }
   `;
 
+  private _onSidebarResize(e: CustomEvent<{ width: string; height: string }>) {
+    this.style.setProperty('--sidebar-width', e.detail.width);
+    this.style.setProperty('--sidebar-height', e.detail.height);
+  }
+
   render() {
     return html`
       <galleon-canvas
@@ -71,13 +77,15 @@ export class GalleonShell extends LitElement {
         rows=${this.rows}
         portrait-columns=${this.portraitColumns}
       ></galleon-canvas>
-      <galleon-components-browser>
-        <galleon-component name="Chart" description="Visualise time-series or aggregated metrics" colspan="4" rowspan="3"></galleon-component>
-        <galleon-component name="Table" description="Browse and filter tabular data" colspan="6" rowspan="4"></galleon-component>
-        <galleon-component name="Map" description="Geo-spatial data on an interactive map" colspan="4" rowspan="4"></galleon-component>
-        <galleon-component name="Logs" description="Tail and search structured log streams" colspan="12" rowspan="2"></galleon-component>
-        <slot name="components"></slot>
-      </galleon-components-browser>
+      <galleon-sidebar @galleon-sidebar-resize=${this._onSidebarResize}>
+        <galleon-components-browser>
+          <galleon-component name="Chart" description="Visualise time-series or aggregated metrics" colspan="4" rowspan="3"></galleon-component>
+          <galleon-component name="Table" description="Browse and filter tabular data" colspan="6" rowspan="4"></galleon-component>
+          <galleon-component name="Map" description="Geo-spatial data on an interactive map" colspan="4" rowspan="4"></galleon-component>
+          <galleon-component name="Logs" description="Tail and search structured log streams" colspan="12" rowspan="2"></galleon-component>
+          <slot name="components"></slot>
+        </galleon-components-browser>
+      </galleon-sidebar>
     `;
   }
 }

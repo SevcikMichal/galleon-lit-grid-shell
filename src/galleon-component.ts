@@ -13,18 +13,18 @@ export class GalleonComponent extends LitElement {
   static styles = css`
     :host {
       display: block;
-      border: 1px solid #e2e2e2;
+      border: 1px solid var(--galleon-border, #e2e2e2);
       border-radius: 6px;
-      background: #fff;
+      background: var(--galleon-surface-2, #fff);
       cursor: grab;
       user-select: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.2s;
       overflow: hidden;
     }
 
     :host(:hover) {
-      border-color: #aaa;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-color: var(--galleon-text-muted, #aaa);
+      box-shadow: 0 2px 8px var(--galleon-shadow, rgba(0,0,0,0.1));
     }
 
     :host(:active) {
@@ -38,11 +38,12 @@ export class GalleonComponent extends LitElement {
     .preview {
       width: 100%;
       aspect-ratio: 16 / 7;
-      background: #f0f0f0;
+      background: var(--galleon-bg, #f0f0f0);
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      transition: background 0.2s;
     }
 
     .preview img {
@@ -64,11 +65,12 @@ export class GalleonComponent extends LitElement {
       font-size: clamp(11px, 3.5cqi, 14px);
       font-weight: 600;
       margin-bottom: clamp(2px, 1cqi, 5px);
+      color: var(--galleon-text, #333);
     }
 
     .description {
       font-size: clamp(10px, 2.8cqi, 12px);
-      color: #888;
+      color: var(--galleon-text-muted, #888);
       line-height: 1.4;
     }
   `;
