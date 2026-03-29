@@ -42,13 +42,15 @@ export class GalleonCanvas extends LitElement {
     }
 
     .track {
-      border: 1px solid #ddd;
-      transition: background 0.1s;
+      margin: 4px;
+      border-radius: 8px;
+      border: 1.5px dashed rgba(0,0,0,0.1);
+      transition: background 0.12s, border-color 0.12s;
     }
 
     .track.will-fill {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.1);
+      border: 1.5px solid rgba(59, 130, 246, 0.35);
     }
 
     slot {

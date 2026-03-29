@@ -11,8 +11,10 @@ export class GalleonCell extends LitElement {
   static styles = css`
     :host {
       display: block;
-      border: 1px solid #000;
       background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.06);
+      margin: 4px;
     }
   `;
 
