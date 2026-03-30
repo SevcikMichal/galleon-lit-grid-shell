@@ -5,6 +5,8 @@ import './galleon-sidebar.js';
 import './galleon-components-browser.js';
 import './galleon-component.js';
 
+const API_BASE = (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE ?? 'http://localhost:8080';
+
 @customElement('galleon-shell')
 export class GalleonShell extends LitElement {
   @property({ type: Number }) columns = 12;
@@ -64,6 +66,25 @@ export class GalleonShell extends LitElement {
       }
     }
   `;
+
+  override connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener('galleon-cell-save', this._onCellSave as EventListener);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this.removeEventListener('galleon-cell-save', this._onCellSave as EventListener);
+  }
+
+  private _onCellSave = async (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    await fetch(`${API_BASE}/api/cells`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(detail),
+    });
+  };
 
   private _onSidebarResize(e: CustomEvent<{ width: string; height: string }>) {
     this.style.setProperty('--sidebar-width', e.detail.width);
