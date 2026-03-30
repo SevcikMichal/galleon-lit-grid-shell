@@ -9,6 +9,9 @@ export class GalleonComponent extends LitElement {
   @property() preview = '';
   @property({ type: Number }) colspan = 2;
   @property({ type: Number }) rowspan = 2;
+  @property({ attribute: 'widget-tag' }) widgetTag = '';
+  @property({ attribute: 'widget-microfrontend' }) widgetMicrofrontend = '';
+  @property({ attribute: 'widget-attrs' }) widgetAttrs = '{}';
 
   static styles = css`
     :host {
@@ -87,12 +90,16 @@ export class GalleonComponent extends LitElement {
       name: this.name,
       colspan: this.colspan,
       rowspan: this.rowspan,
+      widgetTag: this.widgetTag,
+      widgetMicrofrontend: this.widgetMicrofrontend,
+      widgetAttrs: this.widgetAttrs,
     }));
     e.dataTransfer!.effectAllowed = 'copy';
   }
 
   private _onTouchStart(e: TouchEvent) {
-    startTouchDrag(e, { type: 'component', name: this.name, colspan: this.colspan, rowspan: this.rowspan });
+    startTouchDrag(e, { type: 'component', name: this.name, colspan: this.colspan, rowspan: this.rowspan,
+      widgetTag: this.widgetTag, widgetMicrofrontend: this.widgetMicrofrontend, widgetAttrs: this.widgetAttrs });
   }
 
   render() {

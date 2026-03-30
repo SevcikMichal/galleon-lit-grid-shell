@@ -1,5 +1,5 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValues } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
 import { startTouchDrag } from './touch-drag.js';
 
 @customElement('galleon-cell')
@@ -10,6 +10,13 @@ export class GalleonCell extends LitElement {
   @property({ type: Number }) rowspan = 1;
   @property() name = '';
   @property({ type: String, attribute: 'cell-id' }) cellId = '';
+  @property({ attribute: 'widget-tag' }) widgetTag = '';
+  @property({ attribute: 'widget-microfrontend' }) widgetMicrofrontend = '';
+  @property({ attribute: 'widget-attrs' }) widgetAttrs = '{}';
+
+  @state() private _editing = false;
+
+  private _ctxObserver?: MutationObserver;
 
   static styles = css`
     :host {
@@ -65,21 +72,96 @@ export class GalleonCell extends LitElement {
       transition: background 0.1s, color 0.1s;
     }
 
-    button:hover {
+    .btn-remove:hover {
       background: #fee2e2;
       color: #ef4444;
+    }
+
+    .btn-edit:hover {
+      background: #e0f2fe;
+      color: #0284c7;
     }
 
     .content {
       flex: 1;
       display: flex;
       min-height: 0;
+      position: relative;
     }
 
     polyfea-context {
       display: flex;
       flex: 1;
       min-height: 0;
+    }
+
+    .editor-panel {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: var(--galleon-surface, #fafafa);
+      border-top: 1px solid var(--galleon-border, #e2e2e2);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .editor-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--galleon-text-muted, #888);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+
+    .editor-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .editor-key {
+      font-size: 11px;
+      color: var(--galleon-text-muted, #888);
+      min-width: 80px;
+      flex-shrink: 0;
+      font-family: monospace;
+    }
+
+    .editor-val {
+      flex: 1;
+      font-size: 12px;
+      padding: 3px 6px;
+      border: 1px solid var(--galleon-border, #ccc);
+      border-radius: 4px;
+      background: var(--galleon-surface-2, #fff);
+      color: var(--galleon-text, #333);
+      outline: none;
+    }
+
+    .editor-val:focus {
+      border-color: #0284c7;
+    }
+
+    .editor-close {
+      all: unset;
+      cursor: pointer;
+      margin-top: auto;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px;
+      border-radius: 6px;
+      background: var(--galleon-hover, #eee);
+      color: var(--galleon-text, #333);
+      transition: background 0.1s;
+    }
+
+    .editor-close:hover {
+      background: var(--galleon-border, #ddd);
     }
 
     .resize-handle {
@@ -142,24 +224,115 @@ export class GalleonCell extends LitElement {
     }));
   }
 
+  private _toggleEdit(e: Event) {
+    e.stopPropagation();
+    this._editing = !this._editing;
+  }
+
+  private _setAttr(key: string, value: string) {
+    const attrs = { ...this._parsedAttrs, [key]: value };
+    this.widgetAttrs = JSON.stringify(attrs);
+    // apply immediately to the rendered widget
+    this._applyAttrs();
+  }
+
+  private get _parsedAttrs(): Record<string, string> {
+    try { return JSON.parse(this.widgetAttrs); } catch { return {}; }
+  }
+
+  private _observeContext() {
+    this._ctxObserver?.disconnect();
+    if (!this.widgetTag) return;
+    // polyfea-context uses an open shadow root; wait for it to be stamped
+    const attachObserver = () => {
+      const ctx = this.shadowRoot!.querySelector('polyfea-context');
+      if (!ctx) return;
+      if (ctx.shadowRoot) {
+        this._ctxObserver = new MutationObserver(() => this._applyAttrs());
+        this._ctxObserver.observe(ctx.shadowRoot, { childList: true, subtree: false });
+        this._applyAttrs();
+      } else {
+        // shadow not ready yet — wait for it to be attached
+        const hostObserver = new MutationObserver(() => {
+          if (ctx.shadowRoot) {
+            hostObserver.disconnect();
+            this._ctxObserver = new MutationObserver(() => this._applyAttrs());
+            this._ctxObserver.observe(ctx.shadowRoot, { childList: true, subtree: false });
+            this._applyAttrs();
+          }
+        });
+        hostObserver.observe(ctx, { childList: true, subtree: false, attributes: true });
+      }
+    };
+    // shadowRoot on this cell is ready; run after current microtask
+    Promise.resolve().then(attachObserver);
+  }
+
+  private _applyAttrs() {
+    if (!this.widgetTag) return;
+    const ctx = this.shadowRoot!.querySelector('polyfea-context');
+    const widget = ctx?.shadowRoot?.querySelector(this.widgetTag) as HTMLElement | null;
+    if (!widget) return;
+    for (const [k, v] of Object.entries(this._parsedAttrs)) {
+      widget.setAttribute(k, v);
+    }
+  }
+
+  private _renderEditor() {
+    const entries = Object.entries(this._parsedAttrs);
+    if (entries.length === 0) {
+      return html`
+        <div class="editor-panel">
+          <div class="editor-title">Attributes</div>
+          <span style="font-size:12px;color:var(--galleon-text-muted,#888)">No attributes defined</span>
+          <button class="editor-close" @click=${this._toggleEdit}>Done</button>
+        </div>`;
+    }
+    return html`
+      <div class="editor-panel">
+        <div class="editor-title">Attributes</div>
+        ${entries.map(([k, v]) => html`
+          <div class="editor-row">
+            <span class="editor-key">${k}</span>
+            <input class="editor-val" .value=${v}
+              @change=${(e: Event) => this._setAttr(k, (e.target as HTMLInputElement).value)} />
+          </div>`)}
+        <button class="editor-close" @click=${this._toggleEdit}>Done</button>
+      </div>`;
+  }
+
   render() {
     return html`
       <header draggable="true" @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}>
         <span class="title">${this.name}</span>
-        <button @click=${this._remove} title="Remove">✕</button>
+        ${this.widgetTag ? html`
+          <button class="btn-edit" @click=${this._toggleEdit} title="Edit attributes">✎</button>` : ''}
+        <button class="btn-remove" @click=${this._remove} title="Remove">✕</button>
       </header>
       <div class="content">
         ${this.cellId
           ? html`<polyfea-context name="galleon-cell-${this.cellId}"></polyfea-context>`
           : html`<slot></slot>`}
+        ${this._editing ? this._renderEditor() : ''}
       </div>
       <div class="resize-handle" @pointerdown=${this._onResizePointerDown}></div>
     `;
   }
 
-  updated() {
+  override updated(changed: PropertyValues) {
     this.style.gridColumn = `${this.col} / span ${this.colspan}`;
     this.style.gridRow = `${this.row} / span ${this.rowspan}`;
+    if (changed.has('widgetTag') || changed.has('cellId')) {
+      this._observeContext();
+    }
+    if (changed.has('widgetAttrs')) {
+      this._applyAttrs();
+    }
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this._ctxObserver?.disconnect();
   }
 }
 

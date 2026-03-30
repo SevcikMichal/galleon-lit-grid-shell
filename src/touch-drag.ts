@@ -4,6 +4,9 @@ export interface TouchDragData {
   colspan: number;
   rowspan: number;
   movingCell?: Element | null;
+  widgetTag?: string;
+  widgetMicrofrontend?: string;
+  widgetAttrs?: string;
 }
 
 export function startTouchDrag(e: TouchEvent, data: TouchDragData) {
