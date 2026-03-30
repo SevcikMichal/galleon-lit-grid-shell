@@ -11,10 +11,12 @@ export class GalleonCell extends LitElement {
   @property() name = '';
   @property({ type: String, attribute: 'cell-id' }) cellId = '';
   @property({ attribute: 'widget-tag' }) widgetTag = '';
-  @property({ attribute: 'widget-microfrontend' }) widgetMicrofrontend = '';
+  @property({ attribute: 'widget-name' }) widgetName = '';
+  @property({ attribute: 'widget-namespace' }) widgetNamespace = '';
   @property({ attribute: 'widget-attrs' }) widgetAttrs = '{}';
 
   @state() private _editing = false;
+  @state() private _widgetPresent = false;
 
   private _ctxObserver?: MutationObserver;
 
@@ -82,6 +84,11 @@ export class GalleonCell extends LitElement {
       color: #0284c7;
     }
 
+    .btn-save:hover {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
     .content {
       flex: 1;
       display: flex;
@@ -91,6 +98,17 @@ export class GalleonCell extends LitElement {
 
     polyfea-context {
       display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .widget-fallback {
+      position: absolute;
+      inset: 0;
+      display: flex;
+    }
+
+    .widget-fallback > * {
       flex: 1;
       min-height: 0;
     }
@@ -202,6 +220,26 @@ export class GalleonCell extends LitElement {
     this.remove();
   }
 
+  private _save(e: Event) {
+    e.stopPropagation();
+    this.dispatchEvent(new CustomEvent('galleon-cell-save', {
+      bubbles: true,
+      composed: true,
+      detail: {
+        cellId: this.cellId,
+        name: this.name,
+        col: this.col,
+        row: this.row,
+        colspan: this.colspan,
+        rowspan: this.rowspan,
+        widgetTag: this.widgetTag,
+        widgetName: this.widgetName,
+        widgetNamespace: this.widgetNamespace,
+        widgetAttrs: this._parsedAttrs,
+      },
+    }));
+  }
+
   private _onDragStart(e: DragEvent) {
     e.dataTransfer!.setData('galleon/cell', JSON.stringify({
       colspan: this.colspan,
@@ -242,6 +280,7 @@ export class GalleonCell extends LitElement {
 
   private _observeContext() {
     this._ctxObserver?.disconnect();
+    this._widgetPresent = false;
     if (!this.widgetTag) return;
     // polyfea-context uses an open shadow root; wait for it to be stamped
     const attachObserver = () => {
@@ -272,7 +311,22 @@ export class GalleonCell extends LitElement {
     if (!this.widgetTag) return;
     const ctx = this.shadowRoot!.querySelector('polyfea-context');
     const widget = ctx?.shadowRoot?.querySelector(this.widgetTag) as HTMLElement | null;
+    this._widgetPresent = !!widget;
     if (!widget) return;
+    for (const [k, v] of Object.entries(this._parsedAttrs)) {
+      widget.setAttribute(k, v);
+    }
+  }
+
+  private _updateFallbackWidget() {
+    const container = this.shadowRoot!.querySelector<HTMLElement>('.widget-fallback');
+    if (!container) return;
+    let widget = container.firstElementChild as HTMLElement | null;
+    if (!widget || widget.tagName.toLowerCase() !== this.widgetTag.toLowerCase()) {
+      container.innerHTML = '';
+      widget = document.createElement(this.widgetTag);
+      container.appendChild(widget);
+    }
     for (const [k, v] of Object.entries(this._parsedAttrs)) {
       widget.setAttribute(k, v);
     }
@@ -307,12 +361,14 @@ export class GalleonCell extends LitElement {
         <span class="title">${this.name}</span>
         ${this.widgetTag ? html`
           <button class="btn-edit" @click=${this._toggleEdit} title="Edit attributes">✎</button>` : ''}
+        <button class="btn-save" @click=${this._save} title="Save cell">⬆</button>
         <button class="btn-remove" @click=${this._remove} title="Remove">✕</button>
       </header>
       <div class="content">
         ${this.cellId
           ? html`<polyfea-context name="galleon-cell-${this.cellId}"></polyfea-context>`
           : html`<slot></slot>`}
+        ${this.widgetTag && !this._widgetPresent ? html`<div class="widget-fallback"></div>` : ''}
         ${this._editing ? this._renderEditor() : ''}
       </div>
       <div class="resize-handle" @pointerdown=${this._onResizePointerDown}></div>
@@ -327,6 +383,9 @@ export class GalleonCell extends LitElement {
     }
     if (changed.has('widgetAttrs')) {
       this._applyAttrs();
+    }
+    if (this.widgetTag && !this._widgetPresent) {
+      this._updateFallbackWidget();
     }
   }
 

@@ -5,7 +5,8 @@ export interface TouchDragData {
   rowspan: number;
   movingCell?: Element | null;
   widgetTag?: string;
-  widgetMicrofrontend?: string;
+  widgetName?: string;
+  widgetNamespace?: string;
   widgetAttrs?: string;
 }
 

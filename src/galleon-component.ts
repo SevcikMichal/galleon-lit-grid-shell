@@ -10,7 +10,8 @@ export class GalleonComponent extends LitElement {
   @property({ type: Number }) colspan = 2;
   @property({ type: Number }) rowspan = 2;
   @property({ attribute: 'widget-tag' }) widgetTag = '';
-  @property({ attribute: 'widget-microfrontend' }) widgetMicrofrontend = '';
+  @property({ attribute: 'widget-name' }) widgetName = '';
+  @property({ attribute: 'widget-namespace' }) widgetNamespace = '';
   @property({ attribute: 'widget-attrs' }) widgetAttrs = '{}';
 
   static styles = css`
@@ -77,6 +78,21 @@ export class GalleonComponent extends LitElement {
       color: var(--galleon-text-muted, #888);
       line-height: 1.4;
     }
+
+    .mf-badge {
+      display: inline-block;
+      margin-top: clamp(3px, 1.5cqi, 6px);
+      font-size: clamp(9px, 2.2cqi, 10px);
+      font-family: monospace;
+      color: var(--galleon-text-muted, #aaa);
+      background: var(--galleon-bg, #f0f0f0);
+      border-radius: 3px;
+      padding: 1px 5px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   `;
 
   connectedCallback() {
@@ -91,15 +107,19 @@ export class GalleonComponent extends LitElement {
       colspan: this.colspan,
       rowspan: this.rowspan,
       widgetTag: this.widgetTag,
-      widgetMicrofrontend: this.widgetMicrofrontend,
+      widgetName: this.widgetName,
+      widgetNamespace: this.widgetNamespace,
       widgetAttrs: this.widgetAttrs,
     }));
     e.dataTransfer!.effectAllowed = 'copy';
   }
 
   private _onTouchStart(e: TouchEvent) {
-    startTouchDrag(e, { type: 'component', name: this.name, colspan: this.colspan, rowspan: this.rowspan,
-      widgetTag: this.widgetTag, widgetMicrofrontend: this.widgetMicrofrontend, widgetAttrs: this.widgetAttrs });
+    startTouchDrag(e, {
+      type: 'component', name: this.name, colspan: this.colspan, rowspan: this.rowspan,
+      widgetTag: this.widgetTag, widgetName: this.widgetName,
+      widgetNamespace: this.widgetNamespace, widgetAttrs: this.widgetAttrs,
+    });
   }
 
   render() {
@@ -112,6 +132,7 @@ export class GalleonComponent extends LitElement {
       <div class="body">
         <div class="name">${this.name}</div>
         ${this.description ? html`<div class="description">${this.description}</div>` : ''}
+        ${this.widgetNamespace ? html`<span class="mf-badge">${this.widgetNamespace}</span>` : ''}
       </div>
     `;
   }

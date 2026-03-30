@@ -206,7 +206,7 @@ export class GalleonCanvas extends LitElement {
       this._movingCell.setAttribute('row', String(row));
       this._movingCell = null;
     } else {
-      const { name, colspan, rowspan, widgetTag, widgetMicrofrontend, widgetAttrs } = e.detail;
+      const { name, colspan, rowspan, widgetTag, widgetName, widgetNamespace, widgetAttrs } = e.detail;
       const cell = document.createElement('galleon-cell');
       cell.setAttribute('col', String(col));
       cell.setAttribute('row', String(row));
@@ -214,9 +214,10 @@ export class GalleonCanvas extends LitElement {
       cell.setAttribute('rowspan', String(rowspan));
       cell.setAttribute('name', name);
       cell.setAttribute('cell-id', crypto.randomUUID());
-      if (widgetTag)           cell.setAttribute('widget-tag', widgetTag);
-      if (widgetMicrofrontend) cell.setAttribute('widget-microfrontend', widgetMicrofrontend);
-      if (widgetAttrs)         cell.setAttribute('widget-attrs', widgetAttrs);
+      if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
+      if (widgetName)      cell.setAttribute('widget-name', widgetName);
+      if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
+      if (widgetAttrs)     cell.setAttribute('widget-attrs', widgetAttrs);
       this.appendChild(cell);
     }
   };
@@ -275,7 +276,7 @@ export class GalleonCanvas extends LitElement {
 
     const raw = e.dataTransfer!.getData('galleon/component');
     if (!raw) return;
-    const { name, colspan, rowspan, widgetTag, widgetMicrofrontend, widgetAttrs } = JSON.parse(raw);
+    const { name, colspan, rowspan, widgetTag, widgetName, widgetNamespace, widgetAttrs } = JSON.parse(raw);
     const cell = document.createElement('galleon-cell');
     cell.setAttribute('col', String(col));
     cell.setAttribute('row', String(row));
@@ -283,9 +284,10 @@ export class GalleonCanvas extends LitElement {
     cell.setAttribute('rowspan', String(rowspan));
     cell.setAttribute('name', name);
     cell.setAttribute('cell-id', crypto.randomUUID());
-    if (widgetTag)           cell.setAttribute('widget-tag', widgetTag);
-    if (widgetMicrofrontend) cell.setAttribute('widget-microfrontend', widgetMicrofrontend);
-    if (widgetAttrs)         cell.setAttribute('widget-attrs', widgetAttrs);
+    if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
+    if (widgetName)      cell.setAttribute('widget-name', widgetName);
+    if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
+    if (widgetAttrs)     cell.setAttribute('widget-attrs', widgetAttrs);
     this.appendChild(cell);
   }
 
