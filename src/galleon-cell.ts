@@ -72,6 +72,30 @@ export class GalleonCell extends LitElement {
       font-size: 14px;
       flex-shrink: 0;
       transition: background 0.1s, color 0.1s;
+      position: relative;
+    }
+
+    button::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      padding: 3px 7px;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+
+    button:hover::after {
+      opacity: 1;
     }
 
     .btn-remove:hover {
@@ -360,9 +384,9 @@ export class GalleonCell extends LitElement {
       <header draggable="true" @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}>
         <span class="title">${this.name}</span>
         ${this.widgetTag ? html`
-          <button class="btn-edit" @click=${this._toggleEdit} title="Edit attributes">✎</button>` : ''}
-        <button class="btn-save" @click=${this._save} title="Save cell">⬆</button>
-        <button class="btn-remove" @click=${this._remove} title="Remove">✕</button>
+          <button class="btn-edit" @click=${this._toggleEdit} data-tooltip="Edit attributes">✎</button>` : ''}
+        <button class="btn-save" @click=${this._save} data-tooltip="Save">⬆</button>
+        <button class="btn-remove" @click=${this._remove} data-tooltip="Remove">✕</button>
       </header>
       <div class="content">
         ${this.cellId
