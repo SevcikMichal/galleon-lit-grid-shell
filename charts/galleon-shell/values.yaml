@@ -38,6 +38,67 @@ tolerations: []
 
 affinity: {}
 
+# Polyfea CRDs — all optional, disabled by default.
+polyfea:
+  # MicroFrontendClass is cluster-scoped; it defines the shell application
+  # itself (base URI, CSP, PWA manifest, namespace policy).
+  microfrontendClass:
+    enabled: false
+    name: galleon
+    spec:
+      title: "Galleon Shell"
+      baseUri: /galleon
+      namespacePolicy:
+        from: All
+      extraMetaTags:
+        - name: viewport
+          content: "width=device-width, initial-scale=1"
+      # Content Security Policy header. Leave empty to omit.
+      cspHeader: ""
+      # Progressive Web App manifest. Set enabled=true and populate config.
+      progressiveWebApp:
+        enabled: false
+        config: {}
+
+  # MicroFrontend — one per JS file. Galleon produces a single bundle so
+  # a single MicroFrontend resource is sufficient.
+  # The service name is derived automatically from the release fullname.
+  microfrontend:
+    enabled: false
+    # Overrides the resource name. Defaults to the release fullname.
+    name: ""
+    frontendClass: galleon
+    modulePath: galleon-lit-grid-shell.js
+    staticPaths: []
+    # Import map entries for shared lit packages served by the spa-base image.
+    # Keys with special characters must be quoted in YAML.
+    importMap:
+      optional:
+        tslib: /imports/tslib/tslib.es6.mjs
+        lit: /imports/lit/index.js
+        "lit/": /imports/lit/
+        lit-html: /imports/lit-html/lit-html.js
+        "lit-html/": /imports/lit-html/
+        "lit-element/lit-element.js": /imports/lit-element/lit-element.js
+        "lit-element/": /imports/lit-element/
+        "@lit/reactive-element": /imports/@lit/reactive-element/reactive-element.js
+        "@lit/reactive-element/": /imports/@lit/reactive-element/
+
+  # WebComponent for the galleon-shell element itself — rendered into whatever
+  # polyfea context the host page provides (e.g. "shell" or a custom name).
+  webcomponent:
+    enabled: false
+    # Overrides the resource name. Defaults to the release fullname.
+    name: ""
+    element: galleon-shell
+    attributes: []
+    # displayRules controls which polyfea context the shell is injected into.
+    # Example:
+    #   displayRules:
+    #     - anyOf:
+    #       - contextName: shell
+    displayRules: []
+
 # Values forwarded to the galleon-backend sub-chart.
 # See charts/galleon-backend/values.yaml for all available options.
 galleon-backend:

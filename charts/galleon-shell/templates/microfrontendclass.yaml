@@ -1,0 +1,27 @@
+{{- if .Values.polyfea.microfrontendClass.enabled }}
+{{- with .Values.polyfea.microfrontendClass }}
+apiVersion: polyfea.github.io/v1alpha1
+kind: MicroFrontendClass
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "galleon-shell.labels" $ | nindent 4 }}
+spec:
+  title: {{ .spec.title | quote }}
+  baseUri: {{ .spec.baseUri | quote }}
+  namespacePolicy:
+    from: {{ .spec.namespacePolicy.from }}
+  {{- with .spec.extraMetaTags }}
+  extraMetaTags:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .spec.progressiveWebApp.enabled }}
+  progressiveWebApp:
+    {{- toYaml .spec.progressiveWebApp.config | nindent 4 }}
+  {{- end }}
+  {{- if .spec.cspHeader }}
+  cspHeader: {{ .spec.cspHeader | quote }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,25 @@
+{{- if .Values.polyfea.microfrontend.enabled }}
+{{- with .Values.polyfea.microfrontend }}
+apiVersion: polyfea.github.io/v1alpha1
+kind: MicroFrontend
+metadata:
+  name: {{ .name | default (include "galleon-shell.fullname" $) }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "galleon-shell.labels" $ | nindent 4 }}
+spec:
+  frontendClass:
+    name: {{ .frontendClass }}
+  service:
+    name: {{ include "galleon-shell.fullname" $ }}
+  modulePath: {{ .modulePath }}
+  {{- with .staticPaths }}
+  staticPaths:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .importMap }}
+  importMap:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

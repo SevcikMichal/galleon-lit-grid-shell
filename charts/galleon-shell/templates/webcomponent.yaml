@@ -1,0 +1,22 @@
+{{- if .Values.polyfea.webcomponent.enabled }}
+{{- with .Values.polyfea.webcomponent }}
+apiVersion: polyfea.github.io/v1alpha1
+kind: WebComponent
+metadata:
+  name: {{ .name | default (include "galleon-shell.fullname" $) }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "galleon-shell.labels" $ | nindent 4 }}
+spec:
+  microFrontend: {{ $.Values.polyfea.microfrontend.name | default (include "galleon-shell.fullname" $) }}
+  element: {{ .element }}
+  {{- with .attributes }}
+  attributes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .displayRules }}
+  displayRules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
