@@ -1,0 +1,95 @@
+name: Frontend Container
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'demo/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'Dockerfile'
+      - '.dockerignore'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'demo/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - 'Dockerfile'
+      - '.dockerignore'
+  release:
+    types: [published]
+
+jobs:
+  publish_container:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/galleon-lit-grid-shell
+          tags: |
+            type=ref,event=branch
+            type=ref,event=branch,suffix={{date '.YYYYMMDD.HHmm'}}
+            type=ref,event=pr
+            type=ref,event=tag
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: |
+            maintainer=Galleon Owners
+            org.opencontainers.image.title=galleon/galleon-lit-grid-shell
+            org.opencontainers.image.description=K8s-native CSS Grid shell for the Polyfea ecosystem
+            org.opencontainers.image.vendor=Galleon Team
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.run_id }}
+            org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
+          annotations: |
+            maintainer=Galleon Owners
+            org.opencontainers.image.title=galleon/galleon-lit-grid-shell
+            org.opencontainers.image.description=K8s-native CSS Grid shell for the Polyfea ecosystem
+            org.opencontainers.image.vendor=Galleon Team
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.run_id }}
+            org.opencontainers.image.documentation=${{ github.repositoryUrl }}/blob/main/README.md
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64/v8
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
