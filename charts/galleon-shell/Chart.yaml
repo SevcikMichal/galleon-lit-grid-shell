@@ -1,0 +1,11 @@
+apiVersion: v2
+name: galleon-shell
+description: Galleon K8s-native CSS Grid shell — UI + backend
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+dependencies:
+  - name: galleon-backend
+    version: "0.1.0"
+    repository: "file://../galleon-backend"

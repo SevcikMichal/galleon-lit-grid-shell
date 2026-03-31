@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "galleon-backend.fullname" . }}
+  namespace: {{ include "galleon-backend.k8sNamespace" . }}
+  labels:
+    {{- include "galleon-backend.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["polyfea.github.io"]
+    resources: ["webcomponents"]
+    verbs: ["get", "list", "create", "update", "delete"]

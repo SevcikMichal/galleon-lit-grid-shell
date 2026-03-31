@@ -1,0 +1,6 @@
+dependencies:
+- name: galleon-backend
+  repository: file://../galleon-backend
+  version: 0.1.0
+digest: sha256:31fb0ec590be6297c5644b29f9b6700c4a61f5ab5787707024a05a1ac6d2c3dc
+generated: "2026-03-31T21:31:43.805641468+02:00"

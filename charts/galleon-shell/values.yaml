@@ -1,0 +1,54 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/galleon/galleon-lit-grid-shell
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 7105
+
+# Ingress exposes both the UI (/) and the backend API (/api/) through a single
+# host so the browser can reach the backend on the same origin.
+# Set ingress.enabled=true and configure a host to activate.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: galleon.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources: {}
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Values forwarded to the galleon-backend sub-chart.
+# See charts/galleon-backend/values.yaml for all available options.
+galleon-backend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/galleon/galleon-backend
+    pullPolicy: IfNotPresent
+    tag: ""
+  serviceAccount:
+    create: true
+  k8sNamespace: ""
+  galleonMf:
+    name: ""
+    namespace: ""
