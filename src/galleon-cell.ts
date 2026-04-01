@@ -447,23 +447,14 @@ export class GalleonCell extends LitElement {
     `;
   }
 
-  private _dbg(...args: unknown[]) {
-    console.debug(`[galleon-cell ${this.cellId || '(no-id)'}]`, ...args);
-  }
-
   // Called by galleon-canvas after a user drag or resize to explicitly mark dirty.
   markPositionDirty() {
-    this._dbg('markPositionDirty called → dirty=true');
     this._dirty = true;
   }
 
   override updated(changed: PropertyValues) {
-    const changedKeys = [...changed.keys()];
-    this._dbg('updated', { changedKeys, dirty: this._dirty, unsaved: this.unsaved });
-
     // New drop: canvas sets unsaved before appending → seed dirty.
     if (changed.has('unsaved') && this.unsaved) {
-      this._dbg('unsaved attr set → dirty=true');
       this._dirty = true;
     }
     if (changed.has('widgetTag') || changed.has('cellId')) {
