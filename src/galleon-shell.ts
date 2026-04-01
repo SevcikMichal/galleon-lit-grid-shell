@@ -1,11 +1,13 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import './galleon-canvas.js';
 import './galleon-sidebar.js';
 import './galleon-components-browser.js';
 import './galleon-component.js';
 
 const API_BASE = (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE ?? window.location.origin;
+
+type Toast = { id: number; message: string; ok: boolean };
 
 @customElement('galleon-shell')
 export class GalleonShell extends LitElement {
@@ -14,6 +16,9 @@ export class GalleonShell extends LitElement {
   @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
   @property({ attribute: 'mf-name' }) mfName = '';
   @property({ attribute: 'mf-namespace' }) mfNamespace = '';
+
+  @state() private _toasts: Toast[] = [];
+  private _toastSeq = 0;
 
   static styles = css`
     :host {
@@ -41,6 +46,37 @@ export class GalleonShell extends LitElement {
       right: 0;
       height: 100%;
       z-index: 10;
+    }
+
+    .toasts {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      animation: toast-in 0.15s ease;
+    }
+
+    .toast--ok  { background: #16a34a; }
+    .toast--err { background: #dc2626; }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     @media (orientation: portrait) {
@@ -81,22 +117,38 @@ export class GalleonShell extends LitElement {
     this.removeEventListener('galleon-cell-delete', this._onCellDelete as EventListener);
   }
 
+  private _showToast(message: string, ok: boolean) {
+    const id = ++this._toastSeq;
+    this._toasts = [...this._toasts, { id, message, ok }];
+    setTimeout(() => {
+      this._toasts = this._toasts.filter(t => t.id !== id);
+    }, 3000);
+  }
+
   private _onCellSave = async (e: Event) => {
     const detail = (e as CustomEvent).detail;
-    await fetch(`${API_BASE}/api/cells`, {
+    const { onResult, ...payload } = detail;
+    const res = await fetch(`${API_BASE}/api/cells`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(detail),
+      body: JSON.stringify(payload),
     });
+    onResult?.(res.ok);
   };
 
   private _onCellDelete = async (e: Event) => {
     const { cellId } = (e as CustomEvent).detail;
+    const cell = e.composedPath().find(
+      el => (el as Element).tagName?.toLowerCase() === 'galleon-cell'
+    ) as HTMLElement | undefined;
     const res = await fetch(`${API_BASE}/api/cells/${encodeURIComponent(cellId)}`, {
       method: 'DELETE',
     });
     if (res.ok) {
-      (e.composedPath()[0] as HTMLElement).remove();
+      cell?.remove();
+      this._showToast('Cell deleted', true);
+    } else {
+      this._showToast('Delete failed', false);
     }
   };
 
@@ -122,6 +174,11 @@ export class GalleonShell extends LitElement {
           </polyfea-context>
         </galleon-components-browser>
       </galleon-sidebar>
+      <div class="toasts">
+        ${this._toasts.map(t => html`
+          <div class="toast ${t.ok ? 'toast--ok' : 'toast--err'}">${t.message}</div>
+        `)}
+      </div>
     `;
   }
 }

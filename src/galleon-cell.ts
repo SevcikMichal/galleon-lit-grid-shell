@@ -19,8 +19,12 @@ export class GalleonCell extends LitElement {
 
   @state() private _editing = false;
   @state() private _widgetPresent = false;
+  @state() private _dirty = false;
+  @state() private _saveState: 'idle' | 'saving' | 'ok' | 'error' = 'idle';
 
   private _ctxObserver?: MutationObserver;
+  private _initialized = false;
+  private _saveStateTimer?: ReturnType<typeof setTimeout>;
 
   static styles = css`
     :host {
@@ -114,6 +118,15 @@ export class GalleonCell extends LitElement {
     .btn-save:hover {
       background: #dcfce7;
       color: #16a34a;
+    }
+
+    .btn-save--dirty {
+      color: #f59e0b;
+    }
+
+    .btn-save--dirty:hover {
+      background: #fef3c7;
+      color: #d97706;
     }
 
     .content {
@@ -259,6 +272,7 @@ export class GalleonCell extends LitElement {
 
   private _save(e: Event) {
     e.stopPropagation();
+    this._saveState = 'saving';
     this.dispatchEvent(new CustomEvent('galleon-cell-save', {
       bubbles: true,
       composed: true,
@@ -275,6 +289,12 @@ export class GalleonCell extends LitElement {
         widgetAttrs: this._parsedAttrs,
         mfName: this.mfName,
         mfNamespace: this.mfNamespace,
+        onResult: (ok: boolean) => {
+          this._saveState = ok ? 'ok' : 'error';
+          if (ok) this._dirty = false;
+          clearTimeout(this._saveStateTimer);
+          this._saveStateTimer = setTimeout(() => { this._saveState = 'idle'; }, 2000);
+        },
       },
     }));
   }
@@ -309,7 +329,7 @@ export class GalleonCell extends LitElement {
   private _setAttr(key: string, value: string) {
     const attrs = { ...this._parsedAttrs, [key]: value };
     this.widgetAttrs = JSON.stringify(attrs);
-    // apply immediately to the rendered widget
+    this._dirty = true;
     this._applyAttrs();
   }
 
@@ -406,7 +426,10 @@ export class GalleonCell extends LitElement {
         <span class="title">${this.name}</span>
         ${this.widgetTag ? html`
           <button class="btn-edit" @click=${this._toggleEdit} data-tooltip="Edit attributes">✎</button>` : ''}
-        <button class="btn-save" @click=${this._save} data-tooltip="Save">⬆</button>
+        <button class="btn-save ${this._dirty ? 'btn-save--dirty' : ''}"
+          @click=${this._save}
+          data-tooltip=${this._saveState === 'ok' ? 'Saved!' : this._saveState === 'error' ? 'Error!' : this._dirty ? 'Unsaved changes' : 'Save'}
+        >${this._saveState === 'saving' ? '…' : this._saveState === 'ok' ? '✓' : this._saveState === 'error' ? '✕' : this._dirty ? '●' : '⬆'}</button>
         <button class="btn-remove" @click=${this._remove} data-tooltip="Remove">✕</button>
       </header>
       <div class="content">
@@ -421,6 +444,17 @@ export class GalleonCell extends LitElement {
   }
 
   override updated(changed: PropertyValues) {
+    // Mark dirty when position/size changes after initial load.
+    // _initialized guards against the first render flagging everything dirty.
+    if (this._initialized && (
+      changed.has('col') || changed.has('row') ||
+      changed.has('colspan') || changed.has('rowspan')
+    )) {
+      this._dirty = true;
+    }
+    if (changed.has('cellId') && this.cellId) {
+      this._initialized = true;
+    }
     if (changed.has('widgetTag') || changed.has('cellId')) {
       this._observeContext();
     }
@@ -435,6 +469,7 @@ export class GalleonCell extends LitElement {
   override disconnectedCallback() {
     super.disconnectedCallback();
     this._ctxObserver?.disconnect();
+    clearTimeout(this._saveStateTimer);
   }
 }
 
