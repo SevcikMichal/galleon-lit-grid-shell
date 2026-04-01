@@ -459,7 +459,16 @@ export class GalleonCell extends LitElement {
     // Stage machine to avoid polyfea's late attribute batches triggering dirty.
     // no → pending (cellId arrives) → ready (next update cycle)
     if (changed.has('cellId') && this.cellId) {
-      this._initStage = 'pending';
+      if (this.unsaved) {
+        // New drop: all attrs arrive at once — skip the wait, stay dirty.
+        this._initStage = 'ready';
+        this._dirty = true;
+      } else {
+        this._initStage = 'pending';
+        // _initStage is not @state so won't auto-trigger a second cycle;
+        // request one explicitly so the pending→ready reset can run.
+        this.requestUpdate();
+      }
     } else if (this._initStage === 'pending') {
       this._initStage = 'ready';
       if (!this.unsaved) {
