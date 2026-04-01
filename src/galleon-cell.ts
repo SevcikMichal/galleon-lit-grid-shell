@@ -385,6 +385,12 @@ export class GalleonCell extends LitElement {
 
   render() {
     return html`
+      <style>
+        :host {
+          grid-column: ${this.col} / span ${this.colspan};
+          grid-row: ${this.row} / span ${this.rowspan};
+        }
+      </style>
       <header draggable="true" @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}>
         <span class="title">${this.name}</span>
         ${this.widgetTag ? html`
@@ -404,21 +410,6 @@ export class GalleonCell extends LitElement {
   }
 
   override updated(changed: PropertyValues) {
-    const changedKeys = [...changed.keys()];
-    console.debug(
-      `[galleon-cell] updated cellId=${this.cellId} changed=${changedKeys.join(',')}`,
-      `grid: col=${this.col} row=${this.row} colspan=${this.colspan} rowspan=${this.rowspan}`,
-      `gridColumn="${this.style.gridColumn}" gridRow="${this.style.gridRow}"`
-    );
-    if (this.cellId && (
-      changed.has('col') || changed.has('colspan') ||
-      changed.has('row') || changed.has('rowspan') ||
-      changed.has('cellId')
-    )) {
-      console.debug(`[galleon-cell] applying grid style cellId=${this.cellId} col=${this.col} row=${this.row} colspan=${this.colspan} rowspan=${this.rowspan}`);
-      this.style.gridColumn = `${this.col} / span ${this.colspan}`;
-      this.style.gridRow = `${this.row} / span ${this.rowspan}`;
-    }
     if (changed.has('widgetTag') || changed.has('cellId')) {
       this._observeContext();
     }
