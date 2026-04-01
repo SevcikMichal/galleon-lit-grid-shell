@@ -80,25 +80,12 @@ export class GalleonShell extends LitElement {
   }
 
   private _onCellSave = async (e: Event) => {
-    const cell = e.composedPath()[0] as HTMLElement;
     const detail = (e as CustomEvent).detail;
-    const res = await fetch(`${API_BASE}/api/cells`, {
+    await fetch(`${API_BASE}/api/cells`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(detail),
     });
-    if (res.ok) {
-      // Only remove the cell if it is a manually-dropped element (direct child
-      // of the canvas). Polyfea-managed cells have a polyfea-context in their
-      // composed path — removing those would cause a visible gap until the
-      // next polyfea reconcile.
-      const isManagedByPolyfea = e.composedPath().some(
-        el => (el as Element).tagName?.toLowerCase() === 'polyfea-context'
-      );
-      if (!isManagedByPolyfea) {
-        cell.remove();
-      }
-    }
   };
 
   private _onSidebarResize(e: CustomEvent<{ width: string; height: string }>) {
