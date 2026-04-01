@@ -20,7 +20,7 @@ export class GalleonCell extends LitElement {
 
   @state() private _editing = false;
   @state() private _widgetPresent = false;
-  @state() private _dirty = false;
+  @state() private _dirty = true;
   @state() private _saveState: 'idle' | 'saving' | 'ok' | 'error' = 'idle';
 
   // 'no'      — cellId not yet seen
