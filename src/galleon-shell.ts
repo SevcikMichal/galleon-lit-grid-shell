@@ -80,12 +80,18 @@ export class GalleonShell extends LitElement {
   }
 
   private _onCellSave = async (e: Event) => {
+    const cell = e.composedPath()[0] as HTMLElement;
     const detail = (e as CustomEvent).detail;
-    await fetch(`${API_BASE}/api/cells`, {
+    const res = await fetch(`${API_BASE}/api/cells`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(detail),
     });
+    if (res.ok) {
+      // Remove the manually-created element — polyfea now owns this cell
+      // via the WebComponent CRD and will render it into the canvas context.
+      cell.remove();
+    }
   };
 
   private _onSidebarResize(e: CustomEvent<{ width: string; height: string }>) {
