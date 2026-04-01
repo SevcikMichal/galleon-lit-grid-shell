@@ -20,15 +20,16 @@ export class GalleonCell extends LitElement {
 
   @state() private _editing = false;
   @state() private _widgetPresent = false;
-  @state() private _dirty = true;
+  @state() private _dirty = false;
   @state() private _saveState: 'idle' | 'saving' | 'ok' | 'error' = 'idle';
 
   // 'no'      — cellId not yet seen
-  // 'pending' — cellId just arrived this cycle, absorbing late polyfea batches
-  // 'ready'   — two+ update cycles past cellId, user changes now mark dirty
+  // 'pending' — cellId just arrived; waiting for polyfea to finish all attr batches
+  // 'ready'   — polyfea done; user changes now mark dirty
   private _initStage: 'no' | 'pending' | 'ready' = 'no';
   private _ctxObserver?: MutationObserver;
   private _saveStateTimer?: ReturnType<typeof setTimeout>;
+  private _initTimer?: ReturnType<typeof setTimeout>;
 
   static styles = css`
     :host {
@@ -457,22 +458,24 @@ export class GalleonCell extends LitElement {
       this._dirty = true;
     }
     // Stage machine to avoid polyfea's late attribute batches triggering dirty.
-    // no → pending (cellId arrives) → ready (next update cycle)
+    // no → pending (cellId arrives) → ready (setTimeout 0, after polyfea finishes)
     if (changed.has('cellId') && this.cellId) {
       if (this.unsaved) {
-        // New drop: all attrs arrive at once — skip the wait, stay dirty.
+        // New drop: all attrs arrive at once — no need to wait.
         this._initStage = 'ready';
         this._dirty = true;
       } else {
         this._initStage = 'pending';
-        // _initStage is not @state so won't auto-trigger a second cycle;
-        // request one explicitly so the pending→ready reset can run.
-        this.requestUpdate();
-      }
-    } else if (this._initStage === 'pending') {
-      this._initStage = 'ready';
-      if (!this.unsaved) {
-        this._dirty = false;
+        // Use a macrotask so polyfea's synchronous/microtask attr batches
+        // all land before we mark the cell ready and allow dirty tracking.
+        clearTimeout(this._initTimer);
+        this._initTimer = setTimeout(() => {
+          if (this._initStage === 'pending') {
+            this._initStage = 'ready';
+            this._dirty = false;
+            this.requestUpdate();
+          }
+        }, 0);
       }
     }
     if (this._initStage === 'ready' && (
@@ -496,6 +499,7 @@ export class GalleonCell extends LitElement {
     super.disconnectedCallback();
     this._ctxObserver?.disconnect();
     clearTimeout(this._saveStateTimer);
+    clearTimeout(this._initTimer);
   }
 }
 
