@@ -5,7 +5,7 @@ import './galleon-sidebar.js';
 import './galleon-components-browser.js';
 import './galleon-component.js';
 
-const API_BASE = (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE ?? 'http://localhost:8080';
+const API_BASE = (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE ?? window.location.origin;
 
 @customElement('galleon-shell')
 export class GalleonShell extends LitElement {

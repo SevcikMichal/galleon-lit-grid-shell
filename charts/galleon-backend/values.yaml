@@ -24,6 +24,21 @@ service:
   type: ClusterIP
   port: 8080
 
+gateway:
+  enabled: true
+  annotations: {}
+  parentRefs:
+    - name: eg
+      namespace: default
+      # sectionName: https
+  hostnames:
+    - polyfea-controller.example.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/
+
 resources: {}
 
 podAnnotations: {}
