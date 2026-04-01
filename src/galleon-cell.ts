@@ -23,13 +23,8 @@ export class GalleonCell extends LitElement {
   @state() private _dirty = false;
   @state() private _saveState: 'idle' | 'saving' | 'ok' | 'error' = 'idle';
 
-  // 'no'      — cellId not yet seen
-  // 'pending' — cellId just arrived; waiting for polyfea to finish all attr batches
-  // 'ready'   — polyfea done; user changes now mark dirty
-  private _initStage: 'no' | 'pending' | 'ready' = 'no';
   private _ctxObserver?: MutationObserver;
   private _saveStateTimer?: ReturnType<typeof setTimeout>;
-  private _initTimer?: ReturnType<typeof setTimeout>;
 
   static styles = css`
     :host {
@@ -456,46 +451,19 @@ export class GalleonCell extends LitElement {
     console.debug(`[galleon-cell ${this.cellId || '(no-id)'}]`, ...args);
   }
 
+  // Called by galleon-canvas after a user drag or resize to explicitly mark dirty.
+  markPositionDirty() {
+    this._dbg('markPositionDirty called → dirty=true');
+    this._dirty = true;
+  }
+
   override updated(changed: PropertyValues) {
     const changedKeys = [...changed.keys()];
-    this._dbg('updated', { changedKeys, initStage: this._initStage, dirty: this._dirty, unsaved: this.unsaved });
+    this._dbg('updated', { changedKeys, dirty: this._dirty, unsaved: this.unsaved });
 
-    // Seed _dirty from the unsaved attribute (set by canvas on new drops).
+    // New drop: canvas sets unsaved before appending → seed dirty.
     if (changed.has('unsaved') && this.unsaved) {
       this._dbg('unsaved attr set → dirty=true');
-      this._dirty = true;
-    }
-    // Stage machine to avoid polyfea's late attribute batches triggering dirty.
-    // no → pending (cellId arrives) → ready (setTimeout 0, after polyfea finishes)
-    if (changed.has('cellId') && this.cellId) {
-      if (this.unsaved) {
-        // New drop: all attrs arrive at once — no need to wait.
-        this._dbg('cellId arrived with unsaved → stage=ready, dirty=true');
-        this._initStage = 'ready';
-        this._dirty = true;
-      } else {
-        this._dbg('cellId arrived (polyfea) → stage=pending, starting setTimeout');
-        this._initStage = 'pending';
-        // Use a macrotask so polyfea's synchronous/microtask attr batches
-        // all land before we mark the cell ready and allow dirty tracking.
-        clearTimeout(this._initTimer);
-        this._initTimer = setTimeout(() => {
-          this._dbg('setTimeout fired → stage=ready, dirty=false');
-          if (this._initStage === 'pending') {
-            this._initStage = 'ready';
-            this._dirty = false;
-            this.requestUpdate();
-          }
-        }, 0);
-      }
-    }
-    if (this._initStage === 'ready' && (
-      changed.has('col') || changed.has('row') ||
-      changed.has('colspan') || changed.has('rowspan')
-    )) {
-      this._dbg('position changed while ready → dirty=true', {
-        col: this.col, row: this.row, colspan: this.colspan, rowspan: this.rowspan,
-      });
       this._dirty = true;
     }
     if (changed.has('widgetTag') || changed.has('cellId')) {
@@ -513,7 +481,6 @@ export class GalleonCell extends LitElement {
     super.disconnectedCallback();
     this._ctxObserver?.disconnect();
     clearTimeout(this._saveStateTimer);
-    clearTimeout(this._initTimer);
   }
 }
 

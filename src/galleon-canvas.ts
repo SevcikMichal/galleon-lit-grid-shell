@@ -157,6 +157,7 @@ export class GalleonCanvas extends LitElement {
       const row = Math.floor((e.clientY - rect.top) / (rect.height / this.rows)) + 1;
       this._resizingCell.setAttribute('colspan', String(Math.max(1, col - this._resizingCell.col + 1)));
       this._resizingCell.setAttribute('rowspan', String(Math.max(1, row - this._resizingCell.row + 1)));
+      this._resizingCell.markPositionDirty?.();
     }
     this._resizingCell.style.gridColumn = '';
     this._resizingCell.style.gridRow = '';
@@ -223,6 +224,7 @@ export class GalleonCanvas extends LitElement {
       this._movingCell.setAttribute('row', String(row));
       (this._movingCell as HTMLElement).style.gridColumn = '';
       (this._movingCell as HTMLElement).style.gridRow = '';
+      (this._movingCell as any).markPositionDirty?.();
       this._movingCell = null;
     } else {
       const { name, colspan, rowspan, widgetTag, widgetName, widgetNamespace, widgetAttrs } = e.detail;
@@ -294,6 +296,7 @@ export class GalleonCanvas extends LitElement {
       this._movingCell.setAttribute('row', String(row));
       (this._movingCell as HTMLElement).style.gridColumn = '';
       (this._movingCell as HTMLElement).style.gridRow = '';
+      (this._movingCell as any).markPositionDirty?.();
       this._movingCell = null;
       return;
     }
