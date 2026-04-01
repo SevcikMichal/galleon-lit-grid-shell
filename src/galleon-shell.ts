@@ -25,9 +25,11 @@ export class GalleonShell extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      height: 100%;
-      position: relative;
+      width: 100dvw;
+      height: 100dvh;
+      position: fixed;
+      top: 0;
+      left: 0;
       background: var(--galleon-bg, #f0f0f0);
       transition: background 0.2s;
     }

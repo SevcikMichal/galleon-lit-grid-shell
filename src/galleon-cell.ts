@@ -16,14 +16,18 @@ export class GalleonCell extends LitElement {
   @property({ attribute: 'widget-attrs' }) widgetAttrs = '{}';
   @property({ attribute: 'mf-name' }) mfName = '';
   @property({ attribute: 'mf-namespace' }) mfNamespace = '';
+  @property({ type: Boolean }) unsaved = false;
 
   @state() private _editing = false;
   @state() private _widgetPresent = false;
   @state() private _dirty = false;
   @state() private _saveState: 'idle' | 'saving' | 'ok' | 'error' = 'idle';
 
+  // 'no'      — cellId not yet seen
+  // 'pending' — cellId just arrived this cycle, absorbing late polyfea batches
+  // 'ready'   — two+ update cycles past cellId, user changes now mark dirty
+  private _initStage: 'no' | 'pending' | 'ready' = 'no';
   private _ctxObserver?: MutationObserver;
-  private _initialized = false;
   private _saveStateTimer?: ReturnType<typeof setTimeout>;
 
   static styles = css`
@@ -291,7 +295,11 @@ export class GalleonCell extends LitElement {
         mfNamespace: this.mfNamespace,
         onResult: (ok: boolean) => {
           this._saveState = ok ? 'ok' : 'error';
-          if (ok) this._dirty = false;
+          if (ok) {
+            this._dirty = false;
+            this.unsaved = false;
+            this.removeAttribute('unsaved');
+          }
           clearTimeout(this._saveStateTimer);
           this._saveStateTimer = setTimeout(() => { this._saveState = 'idle'; }, 2000);
         },
@@ -444,16 +452,22 @@ export class GalleonCell extends LitElement {
   }
 
   override updated(changed: PropertyValues) {
-    // Mark dirty when position/size changes after initial load.
-    // _initialized guards against the first render flagging everything dirty.
-    if (this._initialized && (
+    // Seed _dirty from the unsaved attribute (set by canvas on new drops).
+    if (changed.has('unsaved') && this.unsaved) {
+      this._dirty = true;
+    }
+    // Stage machine to avoid polyfea's late attribute batches triggering dirty.
+    // no → pending (cellId arrives) → ready (next update cycle)
+    if (changed.has('cellId') && this.cellId) {
+      this._initStage = 'pending';
+    } else if (this._initStage === 'pending') {
+      this._initStage = 'ready';
+    }
+    if (this._initStage === 'ready' && (
       changed.has('col') || changed.has('row') ||
       changed.has('colspan') || changed.has('rowspan')
     )) {
       this._dirty = true;
-    }
-    if (changed.has('cellId') && this.cellId) {
-      this._initialized = true;
     }
     if (changed.has('widgetTag') || changed.has('cellId')) {
       this._observeContext();
