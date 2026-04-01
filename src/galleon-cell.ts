@@ -452,9 +452,17 @@ export class GalleonCell extends LitElement {
     `;
   }
 
+  private _dbg(...args: unknown[]) {
+    console.debug(`[galleon-cell ${this.cellId || '(no-id)'}]`, ...args);
+  }
+
   override updated(changed: PropertyValues) {
+    const changedKeys = [...changed.keys()];
+    this._dbg('updated', { changedKeys, initStage: this._initStage, dirty: this._dirty, unsaved: this.unsaved });
+
     // Seed _dirty from the unsaved attribute (set by canvas on new drops).
     if (changed.has('unsaved') && this.unsaved) {
+      this._dbg('unsaved attr set → dirty=true');
       this._dirty = true;
     }
     // Stage machine to avoid polyfea's late attribute batches triggering dirty.
@@ -462,14 +470,17 @@ export class GalleonCell extends LitElement {
     if (changed.has('cellId') && this.cellId) {
       if (this.unsaved) {
         // New drop: all attrs arrive at once — no need to wait.
+        this._dbg('cellId arrived with unsaved → stage=ready, dirty=true');
         this._initStage = 'ready';
         this._dirty = true;
       } else {
+        this._dbg('cellId arrived (polyfea) → stage=pending, starting setTimeout');
         this._initStage = 'pending';
         // Use a macrotask so polyfea's synchronous/microtask attr batches
         // all land before we mark the cell ready and allow dirty tracking.
         clearTimeout(this._initTimer);
         this._initTimer = setTimeout(() => {
+          this._dbg('setTimeout fired → stage=ready, dirty=false');
           if (this._initStage === 'pending') {
             this._initStage = 'ready';
             this._dirty = false;
@@ -482,6 +493,9 @@ export class GalleonCell extends LitElement {
       changed.has('col') || changed.has('row') ||
       changed.has('colspan') || changed.has('rowspan')
     )) {
+      this._dbg('position changed while ready → dirty=true', {
+        col: this.col, row: this.row, colspan: this.colspan, rowspan: this.rowspan,
+      });
       this._dirty = true;
     }
     if (changed.has('widgetTag') || changed.has('cellId')) {
