@@ -1,0 +1,6 @@
+apiVersion: v2
+name: galleon-samples
+description: Sample galleon-component WebComponent CRDs for the Galleon shell
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

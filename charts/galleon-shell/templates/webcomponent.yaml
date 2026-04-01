@@ -8,7 +8,8 @@ metadata:
   labels:
     {{- include "galleon-shell.labels" $ | nindent 4 }}
 spec:
-  microFrontend: {{ $.Values.polyfea.microfrontend.name | default (include "galleon-shell.fullname" $) }}
+  microFrontend: 
+    name: {{ $.Values.polyfea.microfrontend.name | default (include "galleon-shell.fullname" $) }}
   element: {{ .element }}
   {{- with .attributes }}
   attributes:

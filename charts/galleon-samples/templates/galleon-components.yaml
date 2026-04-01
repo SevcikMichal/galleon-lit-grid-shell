@@ -1,0 +1,51 @@
+{{- range .Values.components }}
+---
+apiVersion: polyfea.github.io/v1alpha1
+kind: WebComponent
+metadata:
+  name: {{ printf "galleon-sample-%s" (include "galleon-samples.componentSlug" .name) | trunc 63 | trimSuffix "-" }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "galleon-samples.labels" $ | nindent 4 }}
+spec:
+  {{- if $.Values.shellMicrofrontend.name }}
+  microFrontend:
+    name: {{ $.Values.shellMicrofrontend.name }}
+    {{- if $.Values.shellMicrofrontend.namespace }}
+    namespace: {{ $.Values.shellMicrofrontend.namespace }}
+    {{- end }}
+  {{- end }}
+  element: galleon-component
+  attributes:
+    - name: name
+      value: {{ .name | quote }}
+    {{- if .description }}
+    - name: description
+      value: {{ .description | quote }}
+    {{- end }}
+    {{- if .preview }}
+    - name: preview
+      value: {{ .preview | quote }}
+    {{- end }}
+    - name: colspan
+      value: {{ .colspan | default 2 | toString | quote }}
+    - name: rowspan
+      value: {{ .rowspan | default 2 | toString | quote }}
+    - name: widget-tag
+      value: {{ .widgetTag | quote }}
+    {{- if .widgetName }}
+    - name: widget-name
+      value: {{ .widgetName | quote }}
+    {{- end }}
+    {{- if .widgetNamespace }}
+    - name: widget-namespace
+      value: {{ .widgetNamespace | quote }}
+    {{- end }}
+    {{- if .widgetAttrs }}
+    - name: widget-attrs
+      value: {{ .widgetAttrs | toJson | quote }}
+    {{- end }}
+  displayRules:
+    - allOf:
+      - context-name: galleon-components
+{{- end }}

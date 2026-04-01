@@ -1,0 +1,55 @@
+# MicroFrontend that provides galleon-component.
+# Set to the name of the MicroFrontend created by the galleon-shell chart
+# (typically "<release-name>-galleon-shell"). Leave empty to omit the
+# microFrontend field — safe when galleon-shell is always pre-loaded.
+shellMicrofrontend:
+  name: ""
+  namespace: ""
+
+# Each entry produces one WebComponent CRD (element: galleon-component)
+# displayed in the galleon-components sidebar context.
+# widgetAttrs is a map — rendered as a JSON string attribute on the element.
+components:
+  - name: Mountain View
+    description: A scenic mountain landscape
+    preview: "https://picsum.photos/seed/mountain/320/140"
+    colspan: 4
+    rowspan: 3
+    widgetTag: img
+    widgetAttrs:
+      src: "https://picsum.photos/seed/mountain/800/600"
+      alt: Mountain landscape
+      style: "width:100%;height:100%;object-fit:cover"
+
+  - name: City Skyline
+    description: Urban cityscape at dusk
+    preview: "https://picsum.photos/seed/city/320/140"
+    colspan: 6
+    rowspan: 4
+    widgetTag: img
+    widgetAttrs:
+      src: "https://picsum.photos/seed/city/1200/800"
+      alt: City skyline
+      style: "width:100%;height:100%;object-fit:cover"
+
+  - name: Ocean Sunset
+    description: Golden hour over the ocean
+    preview: "https://picsum.photos/seed/ocean/320/140"
+    colspan: 4
+    rowspan: 3
+    widgetTag: img
+    widgetAttrs:
+      src: "https://picsum.photos/seed/ocean/800/600"
+      alt: Ocean sunset
+      style: "width:100%;height:100%;object-fit:cover"
+
+  - name: Forest Path
+    description: A quiet path through the woods
+    preview: "https://picsum.photos/seed/forest/320/140"
+    colspan: 3
+    rowspan: 4
+    widgetTag: img
+    widgetAttrs:
+      src: "https://picsum.photos/seed/forest/600/800"
+      alt: Forest path
+      style: "width:100%;height:100%;object-fit:cover"

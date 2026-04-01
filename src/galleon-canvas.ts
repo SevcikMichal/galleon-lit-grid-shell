@@ -2,6 +2,19 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TouchDragData } from './touch-drag.js';
 
+function randomUUID(): string {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback for non-secure contexts (plain HTTP in-cluster)
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0'));
+  return `${hex.slice(0,4).join('')}-${hex.slice(4,6).join('')}-${hex.slice(6,8).join('')}-${hex.slice(8,10).join('')}-${hex.slice(10).join('')}`;
+}
+
 @customElement('galleon-canvas')
 export class GalleonCanvas extends LitElement {
   @property({ type: Number }) columns = 12;
@@ -213,7 +226,7 @@ export class GalleonCanvas extends LitElement {
       cell.setAttribute('colspan', String(colspan));
       cell.setAttribute('rowspan', String(rowspan));
       cell.setAttribute('name', name);
-      cell.setAttribute('cell-id', crypto.randomUUID());
+      cell.setAttribute('cell-id', randomUUID());
       if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
       if (widgetName)      cell.setAttribute('widget-name', widgetName);
       if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
@@ -283,7 +296,7 @@ export class GalleonCanvas extends LitElement {
     cell.setAttribute('colspan', String(colspan));
     cell.setAttribute('rowspan', String(rowspan));
     cell.setAttribute('name', name);
-    cell.setAttribute('cell-id', crypto.randomUUID());
+    cell.setAttribute('cell-id', randomUUID());
     if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
     if (widgetName)      cell.setAttribute('widget-name', widgetName);
     if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);

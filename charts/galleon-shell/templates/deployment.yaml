@@ -33,14 +33,13 @@ spec:
               containerPort: 7105
               protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /
+            tcpSocket:
               port: 7105
             initialDelaySeconds: 5
             periodSeconds: 15
           readinessProbe:
             httpGet:
-              path: /
+              path: /galleon-lit-grid-shell.js
               port: 7105
             initialDelaySeconds: 3
             periodSeconds: 10

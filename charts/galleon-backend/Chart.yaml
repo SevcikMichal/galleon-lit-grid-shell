@@ -3,4 +3,4 @@ name: galleon-backend
 description: Galleon K8s backend — persists grid cells as WebComponent CRDs
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "main.20260331.1922"
