@@ -308,6 +308,7 @@ export class GalleonCanvas extends LitElement {
     cell.setAttribute('rowspan', String(rowspan));
     cell.setAttribute('name', name);
     cell.setAttribute('cell-id', randomUUID());
+    cell.setAttribute('unsaved', '');
     if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
     if (widgetName)      cell.setAttribute('widget-name', widgetName);
     if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);

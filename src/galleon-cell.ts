@@ -462,6 +462,9 @@ export class GalleonCell extends LitElement {
       this._initStage = 'pending';
     } else if (this._initStage === 'pending') {
       this._initStage = 'ready';
+      if (!this.unsaved) {
+        this._dirty = false;
+      }
     }
     if (this._initStage === 'ready' && (
       changed.has('col') || changed.has('row') ||
