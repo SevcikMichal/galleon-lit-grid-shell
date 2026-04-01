@@ -14,12 +14,6 @@ serviceAccount:
 # Defaults to the release namespace when left empty.
 k8sNamespace: ""
 
-# Polyfea micro frontend that serves the galleon-cell element.
-# Leave empty if galleon-cell is always pre-loaded by the host app.
-galleonMf:
-  name: ""
-  namespace: ""
-
 service:
   type: ClusterIP
   port: 8080

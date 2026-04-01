@@ -37,12 +37,6 @@ spec:
               value: "8080"
             - name: K8S_NAMESPACE
               value: {{ include "galleon-backend.k8sNamespace" . | quote }}
-            {{- if .Values.galleonMf.name }}
-            - name: GALLEON_MF_NAME
-              value: {{ .Values.galleonMf.name | quote }}
-            - name: GALLEON_MF_NAMESPACE
-              value: {{ .Values.galleonMf.namespace | quote }}
-            {{- end }}
           livenessProbe:
             tcpSocket:
               port: 8080

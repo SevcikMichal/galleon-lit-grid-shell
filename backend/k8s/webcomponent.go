@@ -26,11 +26,13 @@ type SaveCellRequest struct {
 	WidgetName      string            `json:"widgetName"`
 	WidgetNamespace string            `json:"widgetNamespace"`
 	WidgetAttrs     map[string]string `json:"widgetAttrs"`
+	MfName          string            `json:"mfName"`
+	MfNamespace     string            `json:"mfNamespace"`
 }
 
 // BuildCellWebComponent builds the CRD that represents the galleon-cell element
 // itself, rendered into the galleon-canvas polyfea context.
-func BuildCellWebComponent(namespace, mfName, mfNamespace string, req SaveCellRequest) *unstructured.Unstructured {
+func BuildCellWebComponent(namespace string, req SaveCellRequest) *unstructured.Unstructured {
 	attrs := []interface{}{
 		map[string]interface{}{"name": "cell-id", "value": req.CellID},
 		map[string]interface{}{"name": "col", "value": strconv.Itoa(req.Col)},
@@ -59,16 +61,17 @@ func BuildCellWebComponent(namespace, mfName, mfNamespace string, req SaveCellRe
 		"displayRules": []interface{}{
 			map[string]interface{}{
 				"allOf": []interface{}{
-					map[string]interface{}{"contextName": "galleon-canvas"},
+					map[string]interface{}{"context-name": "galleon-canvas"},
 				},
 			},
 		},
 	}
-	if mfName != "" {
-		spec["microFrontend"] = map[string]interface{}{
-			"name":      mfName,
-			"namespace": mfNamespace,
+	if req.MfName != "" {
+		mf := map[string]interface{}{"name": req.MfName}
+		if req.MfNamespace != "" {
+			mf["namespace"] = req.MfNamespace
 		}
+		spec["microFrontend"] = mf
 	}
 
 	return &unstructured.Unstructured{
@@ -110,21 +113,27 @@ func BuildWidgetWebComponent(namespace string, req SaveCellRequest) *unstructure
 					"galleon/resource-type":        "widget",
 				},
 			},
-			"spec": map[string]interface{}{
-				"microFrontend": map[string]interface{}{
-					"name":      req.WidgetName,
-					"namespace": req.WidgetNamespace,
-				},
-				"element":    req.WidgetTag,
-				"attributes": attrs,
-				"displayRules": []interface{}{
-					map[string]interface{}{
-						"allOf": []interface{}{
-							map[string]interface{}{"contextName": "galleon-cell-" + req.CellID},
+			"spec": func() map[string]interface{} {
+				spec := map[string]interface{}{
+					"element":    req.WidgetTag,
+					"attributes": attrs,
+					"displayRules": []interface{}{
+						map[string]interface{}{
+							"allOf": []interface{}{
+								map[string]interface{}{"context-name": "galleon-cell-" + req.CellID},
+							},
 						},
 					},
-				},
-			},
+				}
+				if req.WidgetName != "" {
+					mf := map[string]interface{}{"name": req.WidgetName}
+					if req.WidgetNamespace != "" {
+						mf["namespace"] = req.WidgetNamespace
+					}
+					spec["microFrontend"] = mf
+				}
+				return spec
+			}(),
 		},
 	}
 }

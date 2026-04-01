@@ -14,6 +14,8 @@ export class GalleonCell extends LitElement {
   @property({ attribute: 'widget-name' }) widgetName = '';
   @property({ attribute: 'widget-namespace' }) widgetNamespace = '';
   @property({ attribute: 'widget-attrs' }) widgetAttrs = '{}';
+  @property({ attribute: 'mf-name' }) mfName = '';
+  @property({ attribute: 'mf-namespace' }) mfNamespace = '';
 
   @state() private _editing = false;
   @state() private _widgetPresent = false;
@@ -260,6 +262,8 @@ export class GalleonCell extends LitElement {
         widgetName: this.widgetName,
         widgetNamespace: this.widgetNamespace,
         widgetAttrs: this._parsedAttrs,
+        mfName: this.mfName,
+        mfNamespace: this.mfNamespace,
       },
     }));
   }

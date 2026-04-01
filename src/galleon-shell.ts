@@ -12,6 +12,8 @@ export class GalleonShell extends LitElement {
   @property({ type: Number }) columns = 12;
   @property({ type: Number }) rows = 8;
   @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
+  @property({ attribute: 'mf-name' }) mfName = '';
+  @property({ attribute: 'mf-namespace' }) mfNamespace = '';
 
   static styles = css`
     :host {
@@ -97,6 +99,8 @@ export class GalleonShell extends LitElement {
         columns=${this.columns}
         rows=${this.rows}
         portrait-columns=${this.portraitColumns}
+        mf-name=${this.mfName}
+        mf-namespace=${this.mfNamespace}
       >
         <polyfea-context name="galleon-canvas"></polyfea-context>
       </galleon-canvas>

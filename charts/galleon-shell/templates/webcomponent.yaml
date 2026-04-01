@@ -8,12 +8,21 @@ metadata:
   labels:
     {{- include "galleon-shell.labels" $ | nindent 4 }}
 spec:
-  microFrontend: 
+  microFrontend:
     name: {{ $.Values.polyfea.microfrontend.name | default (include "galleon-shell.fullname" $) }}
   element: {{ .element }}
   {{- with .attributes }}
   attributes:
-    {{- toYaml . | nindent 4 }}
+    {{- range . }}
+    - name: {{ .name }}
+      {{- if and (eq .name "mf-name") (not .value) }}
+      value: {{ $.Values.polyfea.microfrontend.name | default (include "galleon-shell.fullname" $) | quote }}
+      {{- else if and (eq .name "mf-namespace") (not .value) }}
+      value: {{ $.Release.Namespace | quote }}
+      {{- else }}
+      value: {{ .value | quote }}
+      {{- end }}
+    {{- end }}
   {{- end }}
   {{- with .displayRules }}
   displayRules:

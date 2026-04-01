@@ -14,18 +14,14 @@ import (
 )
 
 type CellsHandler struct {
-	client      dynamic.Interface
-	namespace   string
-	mfName      string
-	mfNamespace string
+	client    dynamic.Interface
+	namespace string
 }
 
-func NewCellsHandler(client dynamic.Interface, namespace, mfName, mfNamespace string) *CellsHandler {
+func NewCellsHandler(client dynamic.Interface, namespace string) *CellsHandler {
 	return &CellsHandler{
-		client:      client,
-		namespace:   namespace,
-		mfName:      mfName,
-		mfNamespace: mfNamespace,
+		client:    client,
+		namespace: namespace,
 	}
 }
 
@@ -107,7 +103,7 @@ func (h *CellsHandler) createOrUpdate(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.Background()
 
-	cellObj := k8sclient.BuildCellWebComponent(h.namespace, h.mfName, h.mfNamespace, req)
+	cellObj := k8sclient.BuildCellWebComponent(h.namespace, req)
 	created, err := h.upsert(ctx, cellObj)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "failed to upsert cell resource: "+err.Error())

@@ -20,6 +20,8 @@ export class GalleonCanvas extends LitElement {
   @property({ type: Number }) columns = 12;
   @property({ type: Number }) rows = 8;
   @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
+  @property({ attribute: 'mf-name' }) mfName = '';
+  @property({ attribute: 'mf-namespace' }) mfNamespace = '';
 
   @state() private _portrait = false;
 
@@ -231,6 +233,8 @@ export class GalleonCanvas extends LitElement {
       if (widgetName)      cell.setAttribute('widget-name', widgetName);
       if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
       if (widgetAttrs)     cell.setAttribute('widget-attrs', widgetAttrs);
+      if (this.mfName)      cell.setAttribute('mf-name', this.mfName);
+      if (this.mfNamespace) cell.setAttribute('mf-namespace', this.mfNamespace);
       this.appendChild(cell);
     }
   };
@@ -301,6 +305,8 @@ export class GalleonCanvas extends LitElement {
     if (widgetName)      cell.setAttribute('widget-name', widgetName);
     if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
     if (widgetAttrs)     cell.setAttribute('widget-attrs', widgetAttrs);
+    if (this.mfName)      cell.setAttribute('mf-name', this.mfName);
+    if (this.mfNamespace) cell.setAttribute('mf-namespace', this.mfNamespace);
     this.appendChild(cell);
   }
 

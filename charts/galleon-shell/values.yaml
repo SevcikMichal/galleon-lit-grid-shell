@@ -91,9 +91,15 @@ polyfea:
     # Overrides the resource name. Defaults to the release fullname.
     name: ""
     element: galleon-shell
-    attributes: []
+    # Use attributes to pass mf-name / mf-namespace to galleon-shell so it
+    # can include the MicroFrontend reference in saved cell CRDs.
+    # Replace the values below with the actual MicroFrontend name/namespace.
+    attributes:
+      - name: mf-name
+        value: ""
+      - name: mf-namespace
+        value: ""
     # displayRules controls which polyfea context the shell is injected into.
-    # Example:
     displayRules:
       - anyOf:
         - context-name: shell
@@ -109,6 +115,3 @@ galleon-backend:
   serviceAccount:
     create: true
   k8sNamespace: ""
-  galleonMf:
-    name: ""
-    namespace: ""

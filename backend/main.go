@@ -20,12 +20,7 @@ func main() {
 		namespace = "default"
 	}
 
-	h := handler.NewCellsHandler(
-		client,
-		namespace,
-		os.Getenv("GALLEON_MF_NAME"),
-		os.Getenv("GALLEON_MF_NAMESPACE"),
-	)
+	h := handler.NewCellsHandler(client, namespace)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/cells", h.Handle)
