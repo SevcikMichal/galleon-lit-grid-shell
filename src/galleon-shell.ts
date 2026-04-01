@@ -88,9 +88,16 @@ export class GalleonShell extends LitElement {
       body: JSON.stringify(detail),
     });
     if (res.ok) {
-      // Remove the manually-created element — polyfea now owns this cell
-      // via the WebComponent CRD and will render it into the canvas context.
-      cell.remove();
+      // Only remove the cell if it is a manually-dropped element (direct child
+      // of the canvas). Polyfea-managed cells have a polyfea-context in their
+      // composed path — removing those would cause a visible gap until the
+      // next polyfea reconcile.
+      const isManagedByPolyfea = e.composedPath().some(
+        el => (el as Element).tagName?.toLowerCase() === 'polyfea-context'
+      );
+      if (!isManagedByPolyfea) {
+        cell.remove();
+      }
     }
   };
 

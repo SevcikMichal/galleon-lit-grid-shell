@@ -404,8 +404,13 @@ export class GalleonCell extends LitElement {
   }
 
   override updated(changed: PropertyValues) {
-    this.style.gridColumn = `${this.col} / span ${this.colspan}`;
-    this.style.gridRow = `${this.row} / span ${this.rowspan}`;
+    // Only apply grid placement when the relevant properties actually changed.
+    // Skipping the update when values are still at defaults (1) prevents a
+    // 1×1 layout flash while polyfea is applying CRD attributes to the element.
+    if (changed.has('col') || changed.has('colspan') || changed.has('row') || changed.has('rowspan')) {
+      this.style.gridColumn = `${this.col} / span ${this.colspan}`;
+      this.style.gridRow = `${this.row} / span ${this.rowspan}`;
+    }
     if (changed.has('widgetTag') || changed.has('cellId')) {
       this._observeContext();
     }
