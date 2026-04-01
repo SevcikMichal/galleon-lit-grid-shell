@@ -72,11 +72,13 @@ export class GalleonShell extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.addEventListener('galleon-cell-save', this._onCellSave as EventListener);
+    this.addEventListener('galleon-cell-delete', this._onCellDelete as EventListener);
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener('galleon-cell-save', this._onCellSave as EventListener);
+    this.removeEventListener('galleon-cell-delete', this._onCellDelete as EventListener);
   }
 
   private _onCellSave = async (e: Event) => {
@@ -86,6 +88,16 @@ export class GalleonShell extends LitElement {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(detail),
     });
+  };
+
+  private _onCellDelete = async (e: Event) => {
+    const { cellId } = (e as CustomEvent).detail;
+    const res = await fetch(`${API_BASE}/api/cells/${encodeURIComponent(cellId)}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      (e.composedPath()[0] as HTMLElement).remove();
+    }
   };
 
   private _onSidebarResize(e: CustomEvent<{ width: string; height: string }>) {

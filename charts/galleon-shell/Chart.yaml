@@ -3,7 +3,7 @@ name: galleon-shell
 description: Galleon K8s-native CSS Grid shell — UI + backend
 type: application
 version: 0.1.0
-appVersion: "main.20260401.1500"
+appVersion: "main.20260401.1531"
 
 dependencies:
   - name: galleon-backend

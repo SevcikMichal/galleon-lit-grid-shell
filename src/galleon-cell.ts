@@ -30,7 +30,7 @@ export class GalleonCell extends LitElement {
       border-radius: 10px;
       box-shadow: 0 1px 3px var(--galleon-shadow, rgba(0,0,0,0.08)), 0 4px 12px var(--galleon-shadow, rgba(0,0,0,0.06));
       margin: 4px;
-      overflow: hidden;
+      overflow: visible;
       position: relative;
       transition: background 0.2s;
     }
@@ -44,6 +44,7 @@ export class GalleonCell extends LitElement {
       border-bottom: 1px solid var(--galleon-border, #f0f0f0);
       cursor: grab;
       transition: border-color 0.2s;
+      overflow: visible;
     }
 
     header:active {
@@ -120,6 +121,8 @@ export class GalleonCell extends LitElement {
       display: flex;
       min-height: 0;
       position: relative;
+      overflow: hidden;
+      border-radius: 0 0 10px 10px;
     }
 
     polyfea-context {
@@ -243,7 +246,15 @@ export class GalleonCell extends LitElement {
   `;
 
   private _remove() {
-    this.remove();
+    if (this.cellId) {
+      this.dispatchEvent(new CustomEvent('galleon-cell-delete', {
+        bubbles: true,
+        composed: true,
+        detail: { cellId: this.cellId },
+      }));
+    } else {
+      this.remove();
+    }
   }
 
   private _save(e: Event) {
