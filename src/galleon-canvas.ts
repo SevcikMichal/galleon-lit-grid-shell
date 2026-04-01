@@ -158,6 +158,8 @@ export class GalleonCanvas extends LitElement {
       this._resizingCell.setAttribute('colspan', String(Math.max(1, col - this._resizingCell.col + 1)));
       this._resizingCell.setAttribute('rowspan', String(Math.max(1, row - this._resizingCell.row + 1)));
     }
+    this._resizingCell.style.gridColumn = '';
+    this._resizingCell.style.gridRow = '';
     this._resizingCell = null;
     this._resizePointerId = -1;
     this._resizeMoved = false;
@@ -168,8 +170,8 @@ export class GalleonCanvas extends LitElement {
 
   private _onResizeCancel = (e: PointerEvent) => {
     if (!this._resizingCell || e.pointerId !== this._resizePointerId) return;
-    this._resizingCell.style.gridColumn = `${this._resizingCell.col} / span ${this._resizingCell.colspan}`;
-    this._resizingCell.style.gridRow = `${this._resizingCell.row} / span ${this._resizingCell.rowspan}`;
+    this._resizingCell.style.gridColumn = '';
+    this._resizingCell.style.gridRow = '';
     this._resizingCell = null;
     this._resizePointerId = -1;
     this._resizeMoved = false;
@@ -219,6 +221,8 @@ export class GalleonCanvas extends LitElement {
     if (this._movingCell) {
       this._movingCell.setAttribute('col', String(col));
       this._movingCell.setAttribute('row', String(row));
+      (this._movingCell as HTMLElement).style.gridColumn = '';
+      (this._movingCell as HTMLElement).style.gridRow = '';
       this._movingCell = null;
     } else {
       const { name, colspan, rowspan, widgetTag, widgetName, widgetNamespace, widgetAttrs } = e.detail;
@@ -287,6 +291,8 @@ export class GalleonCanvas extends LitElement {
     if (this._movingCell) {
       this._movingCell.setAttribute('col', String(col));
       this._movingCell.setAttribute('row', String(row));
+      (this._movingCell as HTMLElement).style.gridColumn = '';
+      (this._movingCell as HTMLElement).style.gridRow = '';
       this._movingCell = null;
       return;
     }
