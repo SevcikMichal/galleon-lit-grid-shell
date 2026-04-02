@@ -6,50 +6,147 @@ shellMicrofrontend:
   name: ""
   namespace: ""
 
+# ─── CSP note ────────────────────────────────────────────────────────────────
+# Most sample widgets use <iframe srcdoc> with inline <script> tags.
+# Srcdoc iframes inherit the parent document's Content Security Policy, so
+# inline scripts are blocked when the CSP contains 'strict-dynamic'.
+#
+# To make these samples work you must allow inline scripts. Because
+# 'strict-dynamic' supersedes 'unsafe-inline' in modern browsers, you need to
+# remove 'strict-dynamic' and add 'unsafe-inline' instead, for example:
+#
+#   script-src 'self' 'unsafe-inline'
+#
+# In the polyfea MicroFrontendClass this is the cspHeader field, e.g.:
+#
+#   cspHeader: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src *; connect-src *;"
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Each entry produces one WebComponent CRD (element: galleon-component)
 # displayed in the galleon-components sidebar context.
 # widgetAttrs is a map — rendered as a JSON string attribute on the element.
 components:
-  - name: Mountain View
-    description: A scenic mountain landscape
-    preview: "https://picsum.photos/seed/mountain/320/140"
-    colspan: 4
-    rowspan: 3
-    widgetTag: img
+  - name: Clock
+    description: Analog-style live clock (SVG + JS)
+    colspan: 2
+    rowspan: 2
+    widgetTag: iframe
     widgetAttrs:
-      src: "https://picsum.photos/seed/mountain/800/600"
-      alt: Mountain landscape
-      style: "width:100%;height:100%;object-fit:cover"
+      style: "width:100%;height:100%;border:none"
+      srcdoc: |
+        <style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:transparent}svg{width:min(100vw,100vh);height:min(100vw,100vh)}.face{fill:#1e293b}.rim{fill:none;stroke:#334155;stroke-width:3}.tick{stroke:#64748b;stroke-width:1.5}.tick-major{stroke:#94a3b8;stroke-width:3}.hand{stroke-linecap:round}.second{stroke:#ef4444;stroke-width:1}.minute{stroke:#e2e8f0;stroke-width:2.5}.hour{stroke:#f1f5f9;stroke-width:4}</style>
+        <body><svg viewBox="-50 -50 100 100"><circle class="face" r="48"/><circle class="rim" r="48"/>
+        <g id="ticks"></g><line id="h" class="hand hour"/><line id="m" class="hand minute"/><line id="s" class="hand second"/>
+        </svg><script>
+        const t=document.getElementById('ticks');for(let i=0;i<60;i++){const a=i*6*Math.PI/180,x1=Math.cos(a-Math.PI/2)*42,y1=Math.sin(a-Math.PI/2)*42,x2=Math.cos(a-Math.PI/2)*(i%5?44:46),y2=Math.sin(a-Math.PI/2)*(i%5?44:46),l=document.createElementNS('http://www.w3.org/2000/svg','line');l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);l.setAttribute('class',i%5?'tick':'tick-major');t.appendChild(l);}
+        function tick(){const n=new Date(),s=n.getSeconds()+n.getMilliseconds()/1000,m=n.getMinutes()+s/60,h=(n.getHours()%12)+m/60;function hand(id,angle,r){const a=(angle*30-90)*Math.PI/180;document.getElementById(id).setAttribute('x2',Math.cos(a)*r);document.getElementById(id).setAttribute('y2',Math.sin(a)*r);}hand('h',h,28);hand('m',m,38);hand('s',s,40);}
+        setInterval(tick,50);tick();
+        </script></body>
 
-  - name: City Skyline
-    description: Urban cityscape at dusk
-    preview: "https://picsum.photos/seed/city/320/140"
-    colspan: 6
-    rowspan: 4
-    widgetTag: img
-    widgetAttrs:
-      src: "https://picsum.photos/seed/city/1200/800"
-      alt: City skyline
-      style: "width:100%;height:100%;object-fit:cover"
-
-  - name: Ocean Sunset
-    description: Golden hour over the ocean
-    preview: "https://picsum.photos/seed/ocean/320/140"
-    colspan: 4
-    rowspan: 3
-    widgetTag: img
-    widgetAttrs:
-      src: "https://picsum.photos/seed/ocean/800/600"
-      alt: Ocean sunset
-      style: "width:100%;height:100%;object-fit:cover"
-
-  - name: Forest Path
-    description: A quiet path through the woods
-    preview: "https://picsum.photos/seed/forest/320/140"
+  - name: Weather
+    description: Current weather via open-meteo (no API key)
     colspan: 3
-    rowspan: 4
+    rowspan: 2
+    widgetTag: iframe
+    widgetAttrs:
+      style: "width:100%;height:100%;border:none"
+      srcdoc: |
+        <style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;padding:16px}.card{text-align:center;width:100%}.loc{font-size:11px;color:#64748b;margin-bottom:4px}.temp{font-size:48px;font-weight:700;line-height:1;color:#f8fafc}.unit{font-size:20px;color:#94a3b8}.desc{font-size:13px;color:#94a3b8;margin-top:6px}.err{font-size:12px;color:#ef4444}</style>
+        <body><div class="card"><div class="loc" id="loc">Locating…</div><div class="temp"><span id="t">--</span><span class="unit">°C</span></div><div class="desc" id="d">--</div></div>
+        <script>
+        const codes={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Showers',82:'Heavy showers',95:'Thunderstorm'};
+        navigator.geolocation.getCurrentPosition(p=>{const{latitude:la,longitude:lo}=p.coords;
+        document.getElementById('loc').textContent=`${la.toFixed(2)}°, ${lo.toFixed(2)}°`;
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current_weather=true`).then(r=>r.json()).then(d=>{document.getElementById('t').textContent=Math.round(d.current_weather.temperature);document.getElementById('d').textContent=codes[d.current_weather.weathercode]||'Unknown';});
+        },()=>{document.getElementById('loc').innerHTML='<span class="err">Location denied</span>';});
+        </script></body>
+
+  - name: Markdown Note
+    description: Editable markdown rendered live
+    colspan: 4
+    rowspan: 3
+    widgetTag: iframe
+    widgetAttrs:
+      style: "width:100%;height:100%;border:none"
+      srcdoc: |
+        <style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;display:grid;grid-template-columns:1fr 1fr;height:100vh;background:#0f172a}textarea{background:#1e293b;color:#94a3b8;border:none;border-right:1px solid #334155;padding:12px;font-family:monospace;font-size:12px;resize:none;outline:none}#out{padding:12px;color:#e2e8f0;font-size:13px;overflow-y:auto;line-height:1.6}#out h1,#out h2,#out h3{color:#f1f5f9;margin:0.5em 0}#out code{background:#1e293b;padding:1px 4px;border-radius:3px;font-size:11px}#out a{color:#38bdf8}</style>
+        <body><textarea id="src" placeholder="# Hello\n\nType **markdown** here…"># Hello\n\nType **markdown** here and see it rendered live.\n\n- Item one\n- Item two\n\n`code` works too.</textarea><div id="out"></div>
+        <script>
+        function md(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/^### (.+)/gm,'<h3>$1</h3>').replace(/^## (.+)/gm,'<h2>$1</h2>').replace(/^# (.+)/gm,'<h1>$1</h1>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2">$1</a>').replace(/^- (.+)/gm,'<li>$1</li>').replace(/(<li>.*<\/li>)/gs,'<ul>$1</ul>').replace(/\n\n/g,'</p><p>').replace(/^(?!<[hul])/gm,'').trim()}
+        const src=document.getElementById('src'),out=document.getElementById('out');
+        src.addEventListener('input',()=>out.innerHTML='<p>'+md(src.value)+'</p>');
+        out.innerHTML='<p>'+md(src.value)+'</p>';
+        src.value=src.value.replace(/\\n/g,'\n');src.dispatchEvent(new Event('input'));
+        </script></body>
+
+  - name: CPU / Memory
+    description: Browser performance metrics (live)
+    colspan: 3
+    rowspan: 2
+    widgetTag: iframe
+    widgetAttrs:
+      style: "width:100%;height:100%;border:none"
+      srcdoc: |
+        <style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;padding:12px;height:100vh;display:flex;flex-direction:column;gap:10px;justify-content:center}.row{display:flex;align-items:center;gap:10px}.label{font-size:11px;color:#64748b;width:80px;flex-shrink:0}.bar-bg{flex:1;height:8px;background:#1e293b;border-radius:4px;overflow:hidden}.bar{height:100%;border-radius:4px;transition:width 0.4s}.val{font-size:12px;font-weight:600;width:42px;text-align:right;color:#f8fafc}.mem .bar{background:#818cf8}.js .bar{background:#34d399}.nav .bar{background:#f472b6}</style>
+        <body>
+        <div class="row mem"><span class="label">JS Heap</span><div class="bar-bg"><div class="bar" id="mb"></div></div><span class="val" id="mv">--</span></div>
+        <div class="row nav"><span class="label">DOM Nodes</span><div class="bar-bg"><div class="bar" id="db"></div></div><span class="val" id="dv">--</span></div>
+        <div class="row js"><span class="label">Frames/s</span><div class="bar-bg"><div class="bar" id="fb"></div></div><span class="val" id="fv">--</span></div>
+        <script>
+        let last=performance.now(),frames=0,fps=0;
+        function raf(t){frames++;if(t-last>=1000){fps=frames;frames=0;last=t;}requestAnimationFrame(raf);}requestAnimationFrame(raf);
+        setInterval(()=>{
+          if(performance.memory){const u=performance.memory.usedJSHeapSize,t=performance.memory.jsHeapSizeLimit,p=u/t*100;document.getElementById('mb').style.width=p+'%';document.getElementById('mv').textContent=Math.round(u/1048576)+'M';}
+          const dn=document.querySelectorAll('*').length,dp=Math.min(dn/500*100,100);document.getElementById('db').style.width=dp+'%';document.getElementById('dv').textContent=dn;
+          const fp=Math.min(fps/60*100,100);document.getElementById('fb').style.width=fp+'%';document.getElementById('fv').textContent=fps;
+        },800);
+        </script></body>
+
+  - name: World Clock
+    description: Multiple timezones at a glance
+    colspan: 3
+    rowspan: 2
+    widgetTag: iframe
+    widgetAttrs:
+      style: "width:100%;height:100%;border:none"
+      srcdoc: |
+        <style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;padding:12px;display:flex;flex-direction:column;gap:6px;justify-content:center;height:100vh}.row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #1e293b;padding-bottom:4px}.city{font-size:12px;color:#64748b}.time{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:#f1f5f9}.date{font-size:10px;color:#475569;margin-left:6px}</style>
+        <body id="b"></body>
+        <script>
+        const zones=[['New York','America/New_York'],['London','Europe/London'],['Berlin','Europe/Berlin'],['Dubai','Asia/Dubai'],['Singapore','Asia/Singapore'],['Tokyo','Asia/Tokyo']];
+        function render(){document.getElementById('b').innerHTML=zones.map(([c,z])=>{const n=new Date(),t=n.toLocaleTimeString('en',{timeZone:z,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}),d=n.toLocaleDateString('en',{timeZone:z,month:'short',day:'numeric'});return`<div class="row"><span class="city">${c}</span><span><span class="time">${t}</span><span class="date">${d}</span></span></div>`}).join('');}
+        setInterval(render,1000);render();
+        </script></body>
+
+  - name: Photo
+    description: Random nature photo (picsum.photos)
+    colspan: 3
+    rowspan: 3
     widgetTag: img
     widgetAttrs:
-      src: "https://picsum.photos/seed/forest/600/800"
-      alt: Forest path
+      src: "https://picsum.photos/seed/galleon/800/600"
+      alt: Random photo
       style: "width:100%;height:100%;object-fit:cover"
+
+  - name: Pomodoro Timer
+    description: 25/5 focus timer
+    colspan: 2
+    rowspan: 2
+    widgetTag: iframe
+    widgetAttrs:
+      style: "width:100%;height:100%;border:none"
+      srcdoc: |
+        <style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}.mode{font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.1em}.timer{font-size:52px;font-weight:700;font-variant-numeric:tabular-nums;color:#f8fafc;line-height:1}.controls{display:flex;gap:8px}button{border:none;padding:6px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}.start{background:#22c55e;color:#fff}.reset{background:#1e293b;color:#94a3b8}.progress{width:120px;height:4px;background:#1e293b;border-radius:2px}.bar{height:100%;border-radius:2px;background:#22c55e;transition:width 1s linear}</style>
+        <body>
+        <div class="mode" id="mode">Focus</div>
+        <div class="timer" id="t">25:00</div>
+        <div class="progress"><div class="bar" id="bar" style="width:100%"></div></div>
+        <div class="controls"><button class="start" id="btn" onclick="toggle()">Start</button><button class="reset" onclick="reset()">Reset</button></div>
+        <script>
+        const sessions=[['Focus',25*60],['Break',5*60]];let si=0,total=sessions[0][1],left=total,iv=null;
+        function fmt(s){return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+        function render(){document.getElementById('t').textContent=fmt(left);document.getElementById('bar').style.width=(left/total*100)+'%';document.getElementById('mode').textContent=sessions[si][0];}
+        function toggle(){if(iv){clearInterval(iv);iv=null;document.getElementById('btn').textContent='Start';}else{iv=setInterval(()=>{if(--left<=0){clearInterval(iv);iv=null;si=(si+1)%2;total=sessions[si][1];left=total;document.getElementById('btn').textContent='Start';}render();},1000);document.getElementById('btn').textContent='Pause';}}
+        function reset(){clearInterval(iv);iv=null;left=total=sessions[si][1];document.getElementById('btn').textContent='Start';render();}
+        render();
+        </script></body>
