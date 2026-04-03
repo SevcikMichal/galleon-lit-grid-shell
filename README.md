@@ -1,90 +1,70 @@
 # galleon-lit-grid-shell
 
-A Kubernetes-native modular shell UI that hosts arbitrary Web Components in a CSS Grid canvas. Components are loaded dynamically from [Polyfea](https://github.com/polyfea) micro-frontend manifests / Kubernetes CRDs.
+A Kubernetes-native dashboard shell that hosts arbitrary Web Components in a CSS Grid canvas. Widgets are loaded dynamically via [Polyfea](https://github.com/polyfea) microfrontend context areas backed by K8s CRDs.
 
-## Features
+## What it does
 
-- **CSS Grid canvas** — responsive 12-column layout (4 columns in portrait), drag-and-drop cell placement and resizing
-- **Polyfea integration** — fetches component definitions from polyfea manifests; widgets are lazy-loaded and deduplicated via `defineLazy`
-- **K8s backend** — Go HTTP server persists grid state as Kubernetes ConfigMaps; reads/writes cells via `/api/cells`
-- **Zero heavy UI deps** — only `lit` and `@polyfea/core` as runtime dependencies; ~7 KB gzipped bundle
-- **Touch support** — pointer-capture-based drag and resize work on both desktop and mobile
+- Drag widget cards from the sidebar onto a 12-column grid canvas
+- Each cell loads its widget via a `polyfea-context` (UUID-scoped context area)
+- Edit widget attributes inline; save cells as `WebComponent` CRDs via a backend API
+- Resize cells with pointer-capture handles; move them by dragging the header
+- Full touch support alongside mouse/keyboard
 
 ## Architecture
 
 | Element | Role |
 |---|---|
-| `<galleon-shell>` | Root shell; orchestrates canvas and sidebar |
-| `<galleon-canvas>` | Owns `GridStore` (ReactiveController); all cell state lives here |
-| `<galleon-cell>` | Wraps a placed widget; sets `grid-column`/`grid-row` on host in `willUpdate()` |
-| `<galleon-sidebar>` | Components browser; shows draggable inventory items |
-| `<galleon-component>` | Polyfea-aware component wrapper |
-| `DragDropController` | Transparent overlay-grid drop targeting |
-| `ResizeController` | Pointer Events + `setPointerCapture` resize (no DnD API) |
-| `GalleonBus` | Typed `EventTarget` singleton for cross-shadow-boundary events |
+| `<galleon-shell>` | Root — wires canvas, sidebar, and polyfea context areas |
+| `<galleon-canvas>` | CSS Grid host; handles drop and touch-drag-end to create/move cells |
+| `<galleon-cell>` | Placed widget container; owns `polyfea-context`, attr editor, save/remove |
+| `<galleon-components-browser>` | Sidebar inventory; lists draggable `<galleon-component>` cards |
+| `<galleon-component>` | Inventory card carrying widget identity (`widget-tag`, `widget-name`, `widget-namespace`) and default `widget-attrs` |
+| `ResizeController` | Pointer Events + `setPointerCapture` for col/row resize |
+| `DragDropController` | Overlay-grid drop targeting |
 
-Grid manifests are serialised to/from Kubernetes ConfigMaps via `src/utils/configmap-serializer.ts`.
+Widget identity on a cell:
 
-## Getting Started
+| Attribute | Description |
+|---|---|
+| `widget-tag` | HTML element tag name (`demo-chart-widget`) |
+| `widget-name` | K8s resource name of the widget |
+| `widget-namespace` | K8s namespace of the widget |
+| `widget-attrs` | JSON object of runtime attributes applied to the rendered element |
 
-### Prerequisites
+## Polyfea integration
 
-- Node.js 18+
-- Go 1.21+ (for the backend)
-- A Kubernetes cluster (for production use; the backend falls back gracefully in dev)
+In dev, polyfea uses the `static://` backend which reads `public/polyfea/static-config`. This file defines the inventory components and the pre-seeded demo cells (Chart, Table, Logs).
 
-### Install and run (frontend)
+In production, a K8s polyfea controller serves context areas dynamically from `WebComponent` CRDs. Saving a cell via the `⬆` button dispatches a `galleon-cell-save` event — a backend API will receive this and create/update the corresponding CRD.
+
+Each cell renders `<polyfea-context name="galleon-cell-{cellId}">`. A matching context area in the polyfea backend is what loads the widget. If no context area exists yet (freshly dropped cell, no backend), the widget element is rendered directly as a fallback.
+
+## Getting started
 
 ```sh
 npm install
 npm run dev
 ```
 
-The dev harness (`index.html`) loads two demo widgets — `demo-chart-widget` and `demo-status-widget`.
-
-### Build
+Open `http://localhost:5173`. Three demo cells are pre-loaded from `public/polyfea/static-config`. Drag additional widgets from the sidebar.
 
 ```sh
-npm run build
+npm run build      # type-check + Vite bundle → dist/
+npm test           # Vitest
 ```
 
-Output is emitted to `dist/`.
+## Theming
 
-### Run the backend
-
-```sh
-cd backend
-go run main.go
-```
-
-The backend exposes:
-
-| Route | Description |
-|---|---|
-| `GET /api/cells` | List persisted cell manifests |
-| `PUT /api/cells` | Persist updated cell manifest |
-
-Set the `NAMESPACE` environment variable to target a specific Kubernetes namespace (defaults to `default`).
-
-### Tests
-
-```sh
-npm test          # run once
-npm run test:watch  # watch mode
-npm run test:ui     # Vitest UI
-```
-
-29 unit tests cover `GridStore`, controllers, and the ConfigMap serializer.
-
-## Configuration
-
-Grid layout is stored as a Kubernetes ConfigMap. The `MF_NAME` and `MF_NAMESPACE` environment variables control which Polyfea manifest is loaded.
-
-Global CSS custom properties for theming:
+CSS custom properties (set on any ancestor):
 
 ```css
 --galleon-bg
+--galleon-surface
 --galleon-surface-2
+--galleon-border
+--galleon-text
+--galleon-text-muted
+--galleon-hover
 --galleon-shadow
 ```
 
