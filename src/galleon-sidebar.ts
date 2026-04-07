@@ -1,5 +1,5 @@
 import { LitElement, html, css, svg } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 const THEME_STYLE_ID = 'galleon-theme-vars';
 
@@ -34,9 +34,12 @@ function injectThemeVars() {
 
 const moonIcon = svg`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
 const sunIcon = svg`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+const lockIcon = svg`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+const unlockIcon = svg`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
 
 @customElement('galleon-sidebar')
 export class GalleonSidebar extends LitElement {
+  @property({ type: Boolean }) admin = false;
   @state() private _open = true;
   @state() private _dark = false;
 
@@ -244,19 +247,32 @@ export class GalleonSidebar extends LitElement {
     }));
   }
 
+  private _onAuthClick() {
+    if (this.admin) {
+      this.dispatchEvent(new CustomEvent('galleon-logout', { bubbles: true, composed: true }));
+    } else {
+      this.dispatchEvent(new CustomEvent('galleon-login-request', { bubbles: true, composed: true }));
+    }
+  }
+
   render() {
     return html`
       <header>
-        ${this._open ? html`<span>Components</span>` : ''}
+        ${this._open && this.admin ? html`<span>Components</span>` : ''}
         <button class="hamburger" @click=${this._toggle} title=${this._open ? 'Hide' : 'Show'}>
           <span></span><span></span><span></span>
         </button>
       </header>
-      ${this._open ? html`<div class="content"><slot></slot></div>` : ''}
+      ${this._open && this.admin ? html`<div class="content"><slot></slot></div>` : ''}
       <footer>
         <button class="icon-btn" @click=${this._toggleTheme} title="Toggle theme">
           ${this._dark ? sunIcon : moonIcon}
           ${this._open ? (this._dark ? 'Light mode' : 'Dark mode') : ''}
+        </button>
+        <button class="icon-btn" @click=${this._onAuthClick}
+          title=${this.admin ? 'Sign out' : 'Admin sign in'}>
+          ${this.admin ? unlockIcon : lockIcon}
+          ${this._open ? (this.admin ? 'Sign out' : 'Sign in') : ''}
         </button>
       </footer>
     `;

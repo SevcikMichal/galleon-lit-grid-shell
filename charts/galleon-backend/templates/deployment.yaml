@@ -37,6 +37,20 @@ spec:
               value: "8080"
             - name: K8S_NAMESPACE
               value: {{ include "galleon-backend.k8sNamespace" . | quote }}
+            - name: ADMIN_PASSWORD_HASH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.secretName }}
+                  key: password-hash
+                  optional: true
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.secretName }}
+                  key: jwt-secret
+                  optional: true
+            - name: SESSION_DURATION
+              value: {{ .Values.auth.sessionDuration | quote }}
           livenessProbe:
             tcpSocket:
               port: 8080

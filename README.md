@@ -53,6 +53,35 @@ npm run build      # type-check + Vite bundle → dist/
 npm test           # Vitest
 ```
 
+## Admin authentication
+
+Galleon uses a simple password-based admin mode. Without a password configured, the dashboard is fully editable by anyone — this is intentional for local development.
+
+Regular users see the pre-configured dashboard in read-only mode: no component browser, no edit/save/delete controls, no drag or resize. The lock icon in the sidebar footer opens the sign-in dialog.
+
+**Mechanism:** the admin password is stored as a bcrypt hash in a Kubernetes Secret. On login the backend verifies the hash and issues a short-lived JWT (8 hours by default). The token is kept in `sessionStorage` — it is cleared automatically when the browser tab closes. On each page load and tab focus the frontend re-validates the token with the backend; an expired or missing token drops the user back to read-only mode.
+
+**A note on security posture:** this auth layer is intentionally simple. It is designed for a dashboard running on a private local network, not exposed to the internet. The JWT is stored in `sessionStorage` (same-origin only, cleared on tab close) and all mutating API endpoints require a valid token, but there is no rate limiting, no brute-force protection, and no HTTPS enforcement built in. If you expose this to the public internet, put it behind an ingress with TLS and consider adding a proper identity provider.
+
+### Enabling auth in production
+
+```bash
+# 1. Generate a bcrypt hash of your chosen password (cost factor 12)
+htpasswd -bnBC 12 "" 'your-password' | tr -d ':\n'
+
+# 2. Generate a random JWT signing key
+openssl rand -base64 32
+
+# 3. Create the Kubernetes Secret
+kubectl create secret generic galleon-admin-auth \
+  --from-literal=password-hash='<bcrypt-hash-from-step-1>' \
+  --from-literal=jwt-secret='<key-from-step-2>'
+```
+
+The backend deployment mounts the secret values as environment variables (`optional: true`). When the secret is absent the backend runs in open mode — no login is required.
+
+To change the session length set `auth.sessionDuration` in `charts/galleon-backend/values.yaml` (default `8h`, accepts any Go duration string).
+
 ## Theming
 
 CSS custom properties (set on any ancestor):
