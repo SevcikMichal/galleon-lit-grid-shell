@@ -35,6 +35,7 @@ export class GalleonCanvas extends LitElement {
   private _resizingCell: any | null = null;
   private _resizeMoved = false;
   private _mq: MediaQueryList | undefined;
+  private _polyfeaObserver: MutationObserver | undefined;
 
   private get _cols() { return this._portrait ? this.portraitColumns : this.columns; }
   private get _rowSize() { return this._portrait ? '25vw' : '1fr'; }
@@ -92,6 +93,7 @@ export class GalleonCanvas extends LitElement {
     document.addEventListener('galleon-drag-move', this._onTouchDragMove as EventListener);
     document.addEventListener('galleon-drag-end', this._onTouchDragEnd as EventListener);
     this.addEventListener('galleon-resize-start', this._onResizeStart as EventListener);
+    this._observePolyfeaCells();
   }
 
   disconnectedCallback() {
@@ -102,6 +104,7 @@ export class GalleonCanvas extends LitElement {
     document.removeEventListener('galleon-drag-start', this._onTouchDragStart as EventListener);
     document.removeEventListener('galleon-drag-move', this._onTouchDragMove as EventListener);
     document.removeEventListener('galleon-drag-end', this._onTouchDragEnd as EventListener);
+    this._polyfeaObserver?.disconnect();
   }
 
   private _onOrientationChange = (e: MediaQueryList | MediaQueryListEvent) => {
@@ -358,10 +361,65 @@ export class GalleonCanvas extends LitElement {
     }
   }
 
-  private _propagateAdmin() {
-    this.querySelectorAll('galleon-cell').forEach(cell => {
-      cell.toggleAttribute('admin', this.admin);
+  // Finds all galleon-cell elements in light DOM and inside polyfea-context shadow roots.
+  private _allCells(): Element[] {
+    const cells: Element[] = [...this.querySelectorAll('galleon-cell')];
+    this.querySelectorAll('polyfea-context').forEach(ctx => {
+      if (ctx.shadowRoot) {
+        cells.push(...ctx.shadowRoot.querySelectorAll('galleon-cell'));
+      }
     });
+    return cells;
+  }
+
+  private _propagateAdmin() {
+    this._allCells().forEach(cell => cell.toggleAttribute('admin', this.admin));
+  }
+
+  // Watches polyfea-context shadow roots for galleon-cell elements being stamped in.
+  // polyfea-context may not have its shadow root yet, so we first wait for it via a
+  // MutationObserver on the host, then switch to observing the shadow root itself.
+  private _observePolyfeaCells() {
+    this._polyfeaObserver = new MutationObserver((mutations) => {
+      let needsPropagate = false;
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if ((node as Element).tagName?.toLowerCase() === 'galleon-cell') {
+            needsPropagate = true;
+          }
+        }
+      }
+      if (needsPropagate) this._propagateAdmin();
+    });
+
+    const attachToShadowRoot = (ctx: Element) => {
+      if (ctx.shadowRoot) {
+        this._polyfeaObserver!.observe(ctx.shadowRoot, { childList: true });
+      } else {
+        // Shadow not attached yet — wait for it.
+        const hostObserver = new MutationObserver(() => {
+          if (ctx.shadowRoot) {
+            hostObserver.disconnect();
+            this._polyfeaObserver!.observe(ctx.shadowRoot, { childList: true });
+          }
+        });
+        hostObserver.observe(ctx, { childList: true, subtree: true, attributes: true });
+      }
+    };
+
+    this.querySelectorAll('polyfea-context').forEach(attachToShadowRoot);
+
+    // Also watch for polyfea-context being added to the canvas later.
+    const slotObserver = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if ((node as Element).tagName?.toLowerCase() === 'polyfea-context') {
+            attachToShadowRoot(node as Element);
+          }
+        }
+      }
+    });
+    slotObserver.observe(this, { childList: true });
   }
 }
 
