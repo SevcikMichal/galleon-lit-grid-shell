@@ -21,7 +21,7 @@ export class GalleonShell extends LitElement {
 
   @state() private _toasts: Toast[] = [];
   @state() private _isAdmin = false;
-  @state() private _authChecked = false;
+  @state() private _showLogin = false;
   private _toastSeq = 0;
 
   static styles = css`
@@ -118,6 +118,7 @@ export class GalleonShell extends LitElement {
     this.addEventListener('galleon-login', this._onLogin as EventListener);
     this.addEventListener('galleon-logout', this._onLogout as EventListener);
     this.addEventListener('galleon-login-request', this._onLoginRequest as EventListener);
+    this.addEventListener('galleon-auth-close', this._onAuthClose as EventListener);
     document.addEventListener('visibilitychange', this._onVisibilityChange);
     this._checkAuth();
   }
@@ -129,15 +130,13 @@ export class GalleonShell extends LitElement {
     this.removeEventListener('galleon-login', this._onLogin as EventListener);
     this.removeEventListener('galleon-logout', this._onLogout as EventListener);
     this.removeEventListener('galleon-login-request', this._onLoginRequest as EventListener);
+    this.removeEventListener('galleon-auth-close', this._onAuthClose as EventListener);
     document.removeEventListener('visibilitychange', this._onVisibilityChange);
   }
 
   private async _checkAuth() {
     const token = sessionStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      this._authChecked = true;
-      return;
-    }
+    if (!token) return;
     try {
       const res = await fetch(`${API_BASE}/api/auth/check`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -150,8 +149,6 @@ export class GalleonShell extends LitElement {
       }
     } catch {
       // Network error: keep cached token; stay in current state.
-    } finally {
-      this._authChecked = true;
     }
   }
 
@@ -165,6 +162,7 @@ export class GalleonShell extends LitElement {
     const { token } = (e as CustomEvent).detail;
     if (token) sessionStorage.setItem(TOKEN_KEY, token);
     this._isAdmin = true;
+    this._showLogin = false;
   };
 
   private _onLogout = () => {
@@ -173,9 +171,11 @@ export class GalleonShell extends LitElement {
   };
 
   private _onLoginRequest = () => {
-    // Sidebar "Sign in" button clicked — show overlay by setting _isAdmin false.
-    // _authChecked is already true so the overlay renders.
-    this._isAdmin = false;
+    this._showLogin = true;
+  };
+
+  private _onAuthClose = () => {
+    this._showLogin = false;
   };
 
   private _authHeader(): HeadersInit {
@@ -256,7 +256,7 @@ export class GalleonShell extends LitElement {
           </polyfea-context>
         </galleon-components-browser>
       </galleon-sidebar>
-      ${this._authChecked && !this._isAdmin ? html`<galleon-auth></galleon-auth>` : ''}
+      ${this._showLogin ? html`<galleon-auth></galleon-auth>` : ''}
       <div class="toasts">
         ${this._toasts.map(t => html`
           <div class="toast ${t.ok ? 'toast--ok' : 'toast--err'}">${t.message}</div>
