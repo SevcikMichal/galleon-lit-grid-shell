@@ -33,6 +33,20 @@ gateway:
             type: PathPrefix
             value: /api/
 
+# Admin authentication. When secretName points to a missing secret (or
+# ADMIN_PASSWORD_HASH is empty), auth is disabled — all requests are allowed.
+# To enable:
+#   1. Create the secret manually or set createSecret: true with hashes below.
+#   2. The secret must have keys: password-hash (bcrypt) and jwt-secret (32 random bytes).
+# Both values must be base64-encoded (standard Kubernetes Secret encoding).
+auth:
+  secretName: galleon-admin-auth
+  sessionDuration: "8h"
+  # Set to true to let Helm create the Secret. Supply pre-computed base64 values.
+  createSecret: false
+  passwordHashBase64: ""  # echo -n '<bcrypt-hash>' | base64
+  jwtSecretBase64: ""     # openssl rand -base64 32
+
 resources: {}
 
 podAnnotations: {}

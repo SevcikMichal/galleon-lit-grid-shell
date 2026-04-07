@@ -4,8 +4,10 @@ import './galleon-canvas.js';
 import './galleon-sidebar.js';
 import './galleon-components-browser.js';
 import './galleon-component.js';
+import './galleon-auth.js';
 
 const API_BASE = (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE ?? window.location.origin;
+const TOKEN_KEY = 'galleon-admin-token';
 
 type Toast = { id: number; message: string; ok: boolean };
 
@@ -18,6 +20,8 @@ export class GalleonShell extends LitElement {
   @property({ attribute: 'mf-namespace' }) mfNamespace = '';
 
   @state() private _toasts: Toast[] = [];
+  @state() private _isAdmin = false;
+  @state() private _authChecked = false;
   private _toastSeq = 0;
 
   static styles = css`
@@ -111,12 +115,78 @@ export class GalleonShell extends LitElement {
     super.connectedCallback();
     this.addEventListener('galleon-cell-save', this._onCellSave as EventListener);
     this.addEventListener('galleon-cell-delete', this._onCellDelete as EventListener);
+    this.addEventListener('galleon-login', this._onLogin as EventListener);
+    this.addEventListener('galleon-logout', this._onLogout as EventListener);
+    this.addEventListener('galleon-login-request', this._onLoginRequest as EventListener);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
+    this._checkAuth();
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener('galleon-cell-save', this._onCellSave as EventListener);
     this.removeEventListener('galleon-cell-delete', this._onCellDelete as EventListener);
+    this.removeEventListener('galleon-login', this._onLogin as EventListener);
+    this.removeEventListener('galleon-logout', this._onLogout as EventListener);
+    this.removeEventListener('galleon-login-request', this._onLoginRequest as EventListener);
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
+  }
+
+  private async _checkAuth() {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      this._authChecked = true;
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/check`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        this._isAdmin = true;
+      } else {
+        sessionStorage.removeItem(TOKEN_KEY);
+        this._isAdmin = false;
+      }
+    } catch {
+      // Network error: keep cached token; stay in current state.
+    } finally {
+      this._authChecked = true;
+    }
+  }
+
+  private _onVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && this._isAdmin) {
+      this._checkAuth();
+    }
+  };
+
+  private _onLogin = (e: Event) => {
+    const { token } = (e as CustomEvent).detail;
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    this._isAdmin = true;
+  };
+
+  private _onLogout = () => {
+    sessionStorage.removeItem(TOKEN_KEY);
+    this._isAdmin = false;
+  };
+
+  private _onLoginRequest = () => {
+    // Sidebar "Sign in" button clicked — show overlay by setting _isAdmin false.
+    // _authChecked is already true so the overlay renders.
+    this._isAdmin = false;
+  };
+
+  private _authHeader(): HeadersInit {
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }
+
+  private _handleUnauthorized() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    this._isAdmin = false;
+    this._showToast('Session expired — please sign in again', false);
   }
 
   private _showToast(message: string, ok: boolean) {
@@ -132,9 +202,10 @@ export class GalleonShell extends LitElement {
     const { onResult, ...payload } = detail;
     const res = await fetch(`${API_BASE}/api/cells`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...this._authHeader() },
       body: JSON.stringify(payload),
     });
+    if (res.status === 401) this._handleUnauthorized();
     onResult?.(res.ok);
   };
 
@@ -145,7 +216,12 @@ export class GalleonShell extends LitElement {
     ) as HTMLElement | undefined;
     const res = await fetch(`${API_BASE}/api/cells/${encodeURIComponent(cellId)}`, {
       method: 'DELETE',
+      headers: this._authHeader(),
     });
+    if (res.status === 401) {
+      this._handleUnauthorized();
+      return;
+    }
     if (res.ok) {
       cell?.remove();
       this._showToast('Cell deleted', true);
@@ -167,15 +243,20 @@ export class GalleonShell extends LitElement {
         portrait-columns=${this.portraitColumns}
         mf-name=${this.mfName}
         mf-namespace=${this.mfNamespace}
+        ?admin=${this._isAdmin}
       >
         <polyfea-context name="galleon-canvas"></polyfea-context>
       </galleon-canvas>
-      <galleon-sidebar @galleon-sidebar-resize=${this._onSidebarResize}>
+      <galleon-sidebar
+        ?admin=${this._isAdmin}
+        @galleon-sidebar-resize=${this._onSidebarResize}
+      >
         <galleon-components-browser>
           <polyfea-context name="galleon-components">
           </polyfea-context>
         </galleon-components-browser>
       </galleon-sidebar>
+      ${this._authChecked && !this._isAdmin ? html`<galleon-auth></galleon-auth>` : ''}
       <div class="toasts">
         ${this._toasts.map(t => html`
           <div class="toast ${t.ok ? 'toast--ok' : 'toast--err'}">${t.message}</div>

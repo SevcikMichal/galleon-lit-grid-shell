@@ -17,6 +17,7 @@ export class GalleonCell extends LitElement {
   @property({ attribute: 'mf-name' }) mfName = '';
   @property({ attribute: 'mf-namespace' }) mfNamespace = '';
   @property({ type: Boolean }) unsaved = false;
+  @property({ type: Boolean }) admin = false;
 
   @state() private _editing = false;
   @state() private _widgetPresent = false;
@@ -304,6 +305,7 @@ export class GalleonCell extends LitElement {
   }
 
   private _onDragStart(e: DragEvent) {
+    if (!this.admin) { e.preventDefault(); return; }
     e.dataTransfer!.setData('galleon/cell', JSON.stringify({
       colspan: this.colspan,
       rowspan: this.rowspan,
@@ -312,6 +314,7 @@ export class GalleonCell extends LitElement {
   }
 
   private _onTouchStart(e: TouchEvent) {
+    if (!this.admin) return;
     startTouchDrag(e, { type: 'cell', name: this.name, colspan: this.colspan, rowspan: this.rowspan, movingCell: this });
   }
 
@@ -426,15 +429,18 @@ export class GalleonCell extends LitElement {
           grid-row: ${this.row} / span ${this.rowspan};
         }
       </style>
-      <header draggable="true" @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}>
+      <header ?draggable=${this.admin} @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}
+        style=${this.admin ? '' : 'cursor: default'}>
         <span class="title">${this.name}</span>
-        ${this.widgetTag ? html`
+        ${this.admin && this.widgetTag ? html`
           <button class="btn-edit" @click=${this._toggleEdit} data-tooltip="Edit attributes">✎</button>` : ''}
-        <button class="btn-save ${this._dirty ? 'btn-save--dirty' : ''}"
-          @click=${this._save}
-          data-tooltip=${this._saveState === 'ok' ? 'Saved!' : this._saveState === 'error' ? 'Error!' : this._dirty ? 'Unsaved changes' : 'Save'}
-        >${this._saveState === 'saving' ? '…' : this._saveState === 'ok' ? '✓' : this._saveState === 'error' ? '✕' : this._dirty ? '●' : '⬆'}</button>
-        <button class="btn-remove" @click=${this._remove} data-tooltip="Remove">✕</button>
+        ${this.admin ? html`
+          <button class="btn-save ${this._dirty ? 'btn-save--dirty' : ''}"
+            @click=${this._save}
+            data-tooltip=${this._saveState === 'ok' ? 'Saved!' : this._saveState === 'error' ? 'Error!' : this._dirty ? 'Unsaved changes' : 'Save'}
+          >${this._saveState === 'saving' ? '…' : this._saveState === 'ok' ? '✓' : this._saveState === 'error' ? '✕' : this._dirty ? '●' : '⬆'}</button>
+          <button class="btn-remove" @click=${this._remove} data-tooltip="Remove">✕</button>
+        ` : ''}
       </header>
       <div class="content">
         ${this.cellId
@@ -443,7 +449,7 @@ export class GalleonCell extends LitElement {
         ${this.widgetTag && !this._widgetPresent ? html`<div class="widget-fallback"></div>` : ''}
         ${this._editing ? this._renderEditor() : ''}
       </div>
-      <div class="resize-handle" @pointerdown=${this._onResizePointerDown}></div>
+      ${this.admin ? html`<div class="resize-handle" @pointerdown=${this._onResizePointerDown}></div>` : ''}
     `;
   }
 

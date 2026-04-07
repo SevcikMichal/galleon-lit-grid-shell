@@ -22,6 +22,7 @@ export class GalleonCanvas extends LitElement {
   @property({ type: Number, attribute: 'portrait-columns' }) portraitColumns = 4;
   @property({ attribute: 'mf-name' }) mfName = '';
   @property({ attribute: 'mf-namespace' }) mfNamespace = '';
+  @property({ type: Boolean }) admin = false;
 
   @state() private _portrait = false;
 
@@ -108,6 +109,7 @@ export class GalleonCanvas extends LitElement {
   };
 
   private _onDocDragStart = (e: DragEvent) => {
+    if (!this.admin) return;
     const types = e.dataTransfer?.types ?? [];
     if (types.includes('galleon/cell')) {
       const cell = e.composedPath().find(el => (el as Element).tagName === 'GALLEON-CELL') as any;
@@ -128,7 +130,7 @@ export class GalleonCanvas extends LitElement {
   private _resizePointerId = -1;
 
   private _onResizeStart = (e: CustomEvent<{ cell: any; pointerId: number; pointerType: string }>) => {
-    if (this._resizingCell) return;
+    if (!this.admin || this._resizingCell) return;
     this._resizingCell = e.detail.cell;
     this._resizePointerId = e.detail.pointerId;
     this._resizeMoved = false;
@@ -188,6 +190,7 @@ export class GalleonCanvas extends LitElement {
   };
 
   private _onTouchDragStart = (e: CustomEvent<TouchDragData>) => {
+    if (!this.admin) return;
     const { colspan, rowspan, movingCell } = e.detail;
     this._dragColspan = colspan;
     this._dragRowspan = rowspan;
@@ -236,6 +239,7 @@ export class GalleonCanvas extends LitElement {
       cell.setAttribute('name', name);
       cell.setAttribute('cell-id', randomUUID());
       cell.setAttribute('unsaved', '');
+      if (this.admin)       cell.setAttribute('admin', '');
       if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
       if (widgetName)      cell.setAttribute('widget-name', widgetName);
       if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
@@ -263,6 +267,7 @@ export class GalleonCanvas extends LitElement {
   }
 
   private _onDragOver(e: DragEvent) {
+    if (!this.admin) return;
     const types = e.dataTransfer!.types;
     if (types.includes('galleon/cell')) {
       e.preventDefault();
@@ -286,6 +291,7 @@ export class GalleonCanvas extends LitElement {
   }
 
   private _onDrop(e: DragEvent) {
+    if (!this.admin) return;
     e.preventDefault();
     const rect = this.getBoundingClientRect();
     const col = Math.floor((e.clientX - rect.left) / (rect.width / this._cols)) + 1;
@@ -312,6 +318,7 @@ export class GalleonCanvas extends LitElement {
     cell.setAttribute('name', name);
     cell.setAttribute('cell-id', randomUUID());
     cell.setAttribute('unsaved', '');
+    if (this.admin)       cell.setAttribute('admin', '');
     if (widgetTag)       cell.setAttribute('widget-tag', widgetTag);
     if (widgetName)      cell.setAttribute('widget-name', widgetName);
     if (widgetNamespace) cell.setAttribute('widget-namespace', widgetNamespace);
