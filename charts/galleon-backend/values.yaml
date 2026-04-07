@@ -41,7 +41,7 @@ gateway:
 # Both values must be base64-encoded (standard Kubernetes Secret encoding).
 auth:
   secretName: galleon-admin-auth
-  sessionDuration: "8ah"
+  sessionDuration: "8h"
   # Set to true to let Helm create the Secret. Supply pre-computed base64 values.
   createSecret: false
   passwordHashBase64: ""  # echo -n '<bcrypt-hash>' | base64
