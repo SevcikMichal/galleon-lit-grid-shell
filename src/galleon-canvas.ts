@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { TouchDragData } from './touch-drag.js';
 
@@ -351,8 +351,17 @@ export class GalleonCanvas extends LitElement {
     `;
   }
 
-  updated() {
+  updated(changed: PropertyValues) {
     this._applyGridStyles();
+    if (changed.has('admin')) {
+      this._propagateAdmin();
+    }
+  }
+
+  private _propagateAdmin() {
+    this.querySelectorAll('galleon-cell').forEach(cell => {
+      cell.toggleAttribute('admin', this.admin);
+    });
   }
 }
 

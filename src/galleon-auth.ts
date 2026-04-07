@@ -30,6 +30,29 @@ export class GalleonAuth extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 16px;
+      position: relative;
+    }
+
+    .close {
+      all: unset;
+      cursor: pointer;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      color: var(--galleon-text-muted, #888);
+      font-size: 16px;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .close:hover {
+      background: var(--galleon-hover, #eee);
+      color: var(--galleon-text, #333);
     }
 
     .title {
@@ -103,6 +126,10 @@ export class GalleonAuth extends LitElement {
     }
   `;
 
+  private _close() {
+    this.dispatchEvent(new CustomEvent('galleon-auth-close', { bubbles: true, composed: true }));
+  }
+
   private async _submit(e: SubmitEvent) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -135,6 +162,7 @@ export class GalleonAuth extends LitElement {
   render() {
     return html`
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+        <button class="close" @click=${this._close} aria-label="Close">✕</button>
         <p class="title" id="auth-title">Admin Sign In</p>
         <p class="subtitle">Enter the admin password to enable editing</p>
         <form @submit=${this._submit}>
