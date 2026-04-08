@@ -2,6 +2,19 @@ import { LitElement, html, css, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { startTouchDrag } from './touch-drag.js';
 
+function createDragGhost(name: string): HTMLElement {
+  const el = document.createElement('div');
+  el.textContent = name;
+  Object.assign(el.style, {
+    position: 'fixed', top: '-200px',
+    background: '#1e293b', color: '#fff',
+    padding: '6px 14px', borderRadius: '8px',
+    fontSize: '13px', fontWeight: '600',
+    pointerEvents: 'none', whiteSpace: 'nowrap',
+  });
+  return el;
+}
+
 @customElement('galleon-cell')
 export class GalleonCell extends LitElement {
   @property({ type: Number }) col = 1;
@@ -50,6 +63,8 @@ export class GalleonCell extends LitElement {
       cursor: grab;
       transition: border-color 0.2s;
       overflow: visible;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     header:active {
@@ -311,6 +326,10 @@ export class GalleonCell extends LitElement {
       rowspan: this.rowspan,
     }));
     e.dataTransfer!.effectAllowed = 'move';
+    const ghost = createDragGhost(this.name);
+    document.body.appendChild(ghost);
+    e.dataTransfer!.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
+    requestAnimationFrame(() => ghost.remove());
   }
 
   private _onTouchStart(e: TouchEvent) {
