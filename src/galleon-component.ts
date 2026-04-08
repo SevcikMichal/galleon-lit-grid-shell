@@ -6,7 +6,7 @@ function createDragGhost(name: string): HTMLElement {
   const el = document.createElement('div');
   el.textContent = name;
   Object.assign(el.style, {
-    position: 'fixed', top: '-200px',
+    position: 'fixed', top: '0', left: '-9999px',
     background: '#1e293b', color: '#fff',
     padding: '6px 14px', borderRadius: '8px',
     fontSize: '13px', fontWeight: '600',

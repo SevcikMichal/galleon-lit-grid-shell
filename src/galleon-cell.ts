@@ -6,7 +6,7 @@ function createDragGhost(name: string): HTMLElement {
   const el = document.createElement('div');
   el.textContent = name;
   Object.assign(el.style, {
-    position: 'fixed', top: '-200px',
+    position: 'fixed', top: '0', left: '-9999px',
     background: '#1e293b', color: '#fff',
     padding: '6px 14px', borderRadius: '8px',
     fontSize: '13px', fontWeight: '600',
@@ -448,7 +448,7 @@ export class GalleonCell extends LitElement {
           grid-row: ${this.row} / span ${this.rowspan};
         }
       </style>
-      <header ?draggable=${this.admin} @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}
+      <header draggable=${this.admin ? 'true' : 'false'} @dragstart=${this._onDragStart} @touchstart=${this._onTouchStart}
         style=${this.admin ? '' : 'cursor: default'}>
         <span class="title">${this.name}</span>
         ${this.admin && this.widgetTag ? html`
